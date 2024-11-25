@@ -1,0 +1,426 @@
+---
+bibliography: bio.bib
+csl: harvard-cite-them-right.csl
+title: Group Name's Group Project
+execute:
+  echo: false
+  freeze: true
+format:
+  html:
+    code-copy: true
+    code-link: true
+    toc: true
+    toc-title: On this page
+    toc-depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  pdf:
+    include-in-header:
+      text: |
+        \addtokomafont{disposition}{\rmfamily}
+    mainfont: Spectral
+    sansfont: Roboto Flex
+    monofont: InputMonoCondensed
+    papersize: a4
+    geometry:
+      - top=25mm
+      - left=40mm
+      - right=30mm
+      - bottom=25mm
+      - heightrounded
+    toc: false
+    number-sections: false
+    colorlinks: true
+    highlight-style: github
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.4
+  kernelspec:
+    display_name: Python (base)
+    language: python
+    name: base
+---
+
+```{python}
+#| echo: false
+import os
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+```
+
+```{python}
+#| echo: false
+host = "https://orca.casa.ucl.ac.uk"
+path = "~jreades/data"
+file = "20240614-London-listings.parquet"
+
+if os.path.exists(file):
+    df = pd.read_parquet(file)
+else:
+    df = pd.read_parquet(f"{host}/{path}/{file}")
+    df.to_parquet(file)
+df.shape
+```
+
+## Declaration of Authorship {.unnumbered .unlisted}
+
+We, [insert your group's names], pledge our honour that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+
+Date:
+
+Student Numbers: 
+
+## Brief Group Reflection
+
+| What Went Well | What Was Challenging |
+| -------------- | -------------------- |
+| A              | B                    |
+| C              | D                    |
+
+## Priorities for Feedback
+
+Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
+
+{{< pagebreak >}}
+
+# Response to Questions
+
+See the raw file for examples of how to hide computational output as there is code hidden here.
+
+## 1. Who collected the InsideAirbnb data?
+
+::: {.duedate}
+
+( 2 points; Answer due Week 7 )
+
+As a mission driven, grassroots project, Inside Airbnb relies on the generous support of collaborators who choose to contribute to the project.
+
+1. Murray Cox. Murray is a community artist and activist who uses data, media and technology for social change. He is the founder and current chief data activist of Inside Airbnb.
+2. John Morris. John, an artist and designer, was a founding collaborator who designed and re-designed the website, and is the creative producer of the project's major reports.
+3. Taylor Higgins. Taylor is working on her masters in Florence, Italy at the Scuola di Economia e Statistiche (School of Economics and Statistics) at the Università degli Studi di Firenze with a focus on designing sustainable tourism systems. Taylor is working to build and organise the data and activist communities of Inside Airbnb.
+
+
+
+:::
+
+An inline citation example: As discussed on @insideairbnb, there are many...
+
+A parenthetical citation example: There are many ways to research Airbnb [see, for example, @insideairbnb]... 
+
+
+## 2. Why did they collect the InsideAirbnb data?
+
+::: {.duedate}
+
+( 4 points; Answer due Week 7 )
+
+Inside Airbnb is a mission driven project that provides data and advocacy about Airbnb's impact on residential communities.
+
+"We work towards a vision where communities are empowered with data and information to understand, decide and control the role of renting residential homes to tourists."
+
+
+
+
+:::
+
+```{python}
+#| output: asis
+print(
+    f"One of way to embed output in the text looks like this: after cleaning, we were left with {df.shape[0]:,} rows of data."
+)
+```
+
+This way is also supposed to work (`{python} f"{df.shape[0]:,}" `) but I've found it less reliable.
+
+```{python}
+ax = df.host_listings_count.plot.hist(bins=50)
+ax.set_xlim([0, 500]);
+```
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
+## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
+
+::: {.duedate}
+
+( 11 points; Answer due Week 9 )
+
+:::
+
+## 5. What ethical considerations does the use of the InsideAirbnb data raise? 
+
+::: {.duedate}
+
+( 18 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+## 6. With reference to the InsideAirbnb data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and the types of properties that they list suggest about the nature of Airbnb lettings in London? 
+
+::: {.duedate}
+
+( 15 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+```{python}
+gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=gpd.points_from_xy(df.longitude, df.latitude)).to_crs(27700)
+
+london_wards = gpd.read_file('data/London/London_Ward.shp') # British National Grid
+london_wards = london.to_crs(gdf.crs)
+
+green = gpd.read_file('data/Greenspace.gpkg').to_crs(27700)
+water = gpd.read_file('data/Water.gpkg').to_crs(27700)
+
+#london.plot()
+#london
+```
+
+### 6.1 Location of Airbnb listings in London
+
+```{python}
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
+
+# 创建并列子图
+fig, axes = plt.subplots(1, 2, figsize=(16, 12))  # 1行2列
+
+# --- 第一个子图  ---
+london.plot(ax=axes[0], color='whitesmoke', edgecolor='black')
+gdf.plot(ax=axes[0], color='black', marker='o', markersize=1)
+axes[0].set_title('The distribution of Airbnb houses in London',
+                  fontdict={'fontsize': 15, 'fontweight': '3'})
+axes[0].set_xlabel('Longitude')
+axes[0].set_ylabel('Latitude')
+
+# --- 第二个子图 ---
+# Plot all three GeoPackages to the second axes
+
+water.plot(facecolor='xkcd:sky blue', zorder=1, ax=axes[1], label='Water bodies')
+green.plot(facecolor=(0.5, 0.8, 0, 0.6), zorder=2, ax=axes[1], label='Green spaces')
+london_wards.plot(edgecolor=(0.8, 0, 0, 0.5), facecolor='none', 
+                  linewidth=0.2, zorder=3, ax=axes[1], label='Ward boundaries')
+gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25, 
+                           markersize=1, label='Listings by price', zorder=4, ax=axes[1])
+
+# 设置范围
+axes[1].set_xlim(501000, 563000)
+axes[1].set_ylim(155000, 202000)
+axes[1].set_title('Map for more information', 
+                  fontdict={'fontsize': 15, 'fontweight': '3'})
+
+# 手动创建图例条目
+legend_handles = [
+    mpatches.Patch(color='xkcd:sky blue', label='Water bodies'),
+    mpatches.Patch(color=(0.5, 0.8, 0, 0.6), label='Green spaces'),
+    mlines.Line2D([], [], color='purple', marker='o', linestyle='None', markersize=1, alpha=0.25, label='Listings'),
+    mlines.Line2D([], [], color=(0.8, 0, 0, 0.5), linewidth=1, label='Ward boundaries')
+]
+
+# 添加自定义图例
+axes[1].legend(handles=legend_handles, title="Legend", loc='lower left', fontsize=10)
+
+
+# 调整布局并显示
+plt.tight_layout()
+plt.show()
+```
+
+1. There is a apparent trend that airbnb listings are concentrated in the city center, and the number decreases as it moves into the suburbs. 
+2. Although the listings are mainly concentrated in the city centre, it is worth noting that the listings in the central area have several obvious blank areas, which we can see from the chart on the right that this is due to the distribution of green Spaces there.
+
+```{python}
+# 空间连接 (Spatial Join) 
+# 将 gdf 中的点与 london 中的区域连接
+joined = gpd.sjoin(gdf, london_wards, how='left', predicate='within')  # 表示 gdf 中的点应位于 london 区域内
+
+# 统计每个区域中的点数量
+ward_counts = joined.groupby('GSS_CODE').size()  
+
+# 将统计结果添加到 London GeoDataFrame
+london_wards['point_count'] = london_wards['GSS_CODE'].map(ward_counts)
+london_wards['point_density'] = london_wards['point_count'] / london_wards['HECTARES']
+
+# 绘制结果
+fig, ax = plt.subplots(figsize=(10, 6))
+london_wards.plot(ax=ax, column='point_density', cmap='OrRd', legend=True,
+            legend_kwds={'label': "Point Density per Ward"},
+            edgecolor='black', linewidth=0.1)  # 设置边界线颜色和宽度
+
+# 更新标题以反映点密度
+ax.set_title('Density of Points in London Wards', fontsize=16)
+plt.show()
+```
+
+`This confirms the previously observed phenomenon: while listings are primarily concentrated in the city center, there are still some areas within the center with relatively few listings.`
+
+### 6.2 Analysis of Hosts
+
+```{python}
+# 定义分组范围（例如 0-1, 2-5, 6-10, 11-20, 21+）
+bins = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, float('inf')]  # 更细化的分组区间
+labels = ['1', '2', '3-5', '6-10', '11-20', '21-50', '51-100', '101-200', '201-500', '501+']  # 为每个区间指定标签
+
+# 使用 pd.cut() 将数据分组
+gdf['listings_range'] = pd.cut(gdf['host_listings_count'], bins=bins, labels=labels, right=True)
+
+# 统计每个分组的数量
+range_counts = gdf['listings_range'].value_counts().sort_index()
+
+# 绘制柱状图
+plt.figure(figsize=(10, 3))
+range_counts.plot(kind='bar', color='lightblue')
+
+# 添加标题和标签
+plt.title('Number of Hosts by Listings Count Range')
+plt.xlabel('Listings Count Range')
+plt.ylabel('Number of Hosts')
+plt.xticks(rotation=45)
+
+# 显示图表
+plt.show()
+```
+
+As shown in above picuture, nearly 40 thousand hosts own 1 listing. Two and three to five houses are owned by 10,000 landlords, respectively. And there are a small part of hosts owning dozens of even hundreds of listings (This could mean that theres the landlords are professional and manages multiple listings). 
+
+Given that there are about a total of 85,000 listings, it can be inferred that more than half of the hosts **own multiple properties**. **多房非法性?**
+
+### 6.3 Analysis of property types
+
+```{python}
+#london['point_count'].sort_values()
+#london.sort_values(by='point_count', ascending=True).head(50)
+# london
+gdf.host_listings_count.sort_values()
+```
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as mpatches
+
+# 创建主图框架，使用 subplot2grid
+fig = plt.figure(figsize=(16, 8))  # 设置整个图的大小
+
+# --- 第一个子图: 房源类型分布地图 ---
+ax1 = plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)  # 跨4行2列，显示在左侧
+
+# 绘制背景地图
+london_wards.plot(ax=ax1, color='whitesmoke', edgecolor='black')
+
+# 绘制不同 room_type 的点分布
+room_types = gdf['room_type'].unique()
+colors = plt.colormaps['viridis'](np.linspace(0, 1, len(room_types)))  # 生成颜色列表
+for i, room_type in enumerate(room_types):
+    subset = gdf[gdf['room_type'] == room_type]
+    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=1, label=f"{room_type} ({len(subset)})")
+
+ax1.set_title('Airbnb Houses Categorized by Room Type', fontsize=15)
+ax1.set_xlabel('Longitude')
+ax1.set_ylabel('Latitude')
+ax1.legend(title='Room Type', fontsize=10)
+
+# --- 第二个子图: 按 property_type 绘制柱状图 ---
+ax2 = plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)  # 跨4行2列，显示在右侧
+
+# 统计每种 property_type 的数量
+property_counts = gdf['property_type'].value_counts()
+
+# 筛选出数量超过 200 的类别
+filtered_counts = property_counts[property_counts > 200]
+
+# 绘制柱状图
+filtered_counts.plot(kind='bar', color='skyblue', ax=ax2)
+
+# 添加标题和标签
+ax2.set_title('Number of Listings by Property Type (Count > 200)', fontsize=15)
+ax2.set_xlabel('Property Type')
+ax2.set_ylabel('Count')
+
+# 旋转横轴标签，防止重叠
+ax2.set_xticklabels(filtered_counts.index, rotation=45, ha='right')
+
+# 调整布局并显示图表
+plt.tight_layout()
+plt.show()
+```
+
+1. For property type
+>The high proportion of the Entire rental unit and the entire home shows that renters are more inclined to choose houses with complete privacy.
+
+>The popularity of Private rooms reflects the demand for budget or short-term accommodation. Tenants are willing to share space with landlords or other residents, but still expect some privacy.
+
+2. For room type
+> ...
+
+
+
+
+
+
+
+
+```{python}
+london
+```
+
+```{python}
+df.info()
+df.isna().sum()
+```
+
+```{python}
+# selected_list = ['host_id','host_name','host_since','host_location','host_is_superhost','host_listings_count','host_total_listings_count','host_verifications']
+selected_list = [
+    "host_since",
+    "host_location",
+    "host_is_superhost",
+    "host_listings_count",
+    "host_total_listings_count",
+    "host_verifications",
+    "property_type",
+    "room_type",
+    "accommodates",
+    'beds'
+]
+df.sample(10, random_state=42)[selected_list]
+# df.sample(10, random_state=42)[selected_list].info()
+
+# df[df['host_location'].isna()]
+# df.isna().sum(axis=0).sort_values(ascending=False) #by column
+
+# probs = df.isna().sum(axis=1) #by row
+# probs.plot.hist(bins=30)
+```
+
+## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London? 
+
+::: {.duedate}
+
+( 45 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+
+## Sustainable Authorship Tools
+
+Using the Terminal in Docker, you compile the Quarto report using `quarto render <group_submission_file>.qmd`.
+
+Your QMD file should automatically download your BibTeX and CLS files and any other required files. If this is done right after library loading then the entire report should output successfully.
+
+Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) (<span style="font-family:Sans-Serif;">sansfont</span>) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`). 
+
+## References

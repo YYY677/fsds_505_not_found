@@ -152,6 +152,15 @@ ax.set_xlim([0, 500]);
 
 :::
 
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
 ## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
 
 ::: {.duedate}
@@ -179,13 +188,17 @@ ax.set_xlim([0, 500]);
 ```{python}
 gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=gpd.points_from_xy(df.longitude, df.latitude)).to_crs(27700)
 
-london_wards = gpd.read_file('data/London/London_Ward.shp').to_crs(gdf.crs) # British National Grid
+london = gpd.read_file('data/London/London_Borough_Excluding_MHW.shp').to_crs(gdf.crs) # British National Grid
 
 green = gpd.read_file('data/Greenspace.gpkg').to_crs(27700)
 water = gpd.read_file('data/Water.gpkg').to_crs(27700)
 
 #london.plot()
-#london
+# london
+```
+
+```{python}
+london
 ```
 
 ### 6.1 Location of Airbnb listings in London
@@ -198,7 +211,7 @@ import matplotlib.lines as mlines
 fig, axes = plt.subplots(1, 2, figsize=(16, 12))  # 1行2列
 
 # --- 第一个子图  ---
-london_wards.plot(ax=axes[0], color='whitesmoke', edgecolor='black')
+london.plot(ax=axes[0], color='whitesmoke', edgecolor='black')
 gdf.plot(ax=axes[0], color='black', marker='o', markersize=1)
 axes[0].set_title('The distribution of Airbnb houses in London',
                   fontdict={'fontsize': 15, 'fontweight': '3'})
@@ -210,7 +223,7 @@ axes[0].set_ylabel('Latitude')
 
 water.plot(facecolor='xkcd:sky blue', zorder=1, ax=axes[1], label='Water bodies')
 green.plot(facecolor=(0.5, 0.8, 0, 0.6), zorder=2, ax=axes[1], label='Green spaces')
-london_wards.plot(edgecolor=(0.8, 0, 0, 0.5), facecolor='none', 
+london.plot(edgecolor=(0.8, 0, 0, 0.5), facecolor='none', 
                   linewidth=0.2, zorder=3, ax=axes[1], label='Ward boundaries')
 gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25, 
                            markersize=1, label='Listings by price', zorder=4, ax=axes[1])
@@ -226,7 +239,7 @@ legend_handles = [
     mpatches.Patch(color='xkcd:sky blue', label='Water bodies'),
     mpatches.Patch(color=(0.5, 0.8, 0, 0.6), label='Green spaces'),
     mlines.Line2D([], [], color='purple', marker='o', linestyle='None', markersize=1, alpha=0.25, label='Listings'),
-    mlines.Line2D([], [], color=(0.8, 0, 0, 0.5), linewidth=1, label='Ward boundaries')
+    mlines.Line2D([], [], color=(0.8, 0, 0, 0.5), linewidth=1, label='Borough boundaries')
 ]
 
 # 添加自定义图例
@@ -244,23 +257,23 @@ plt.show()
 ```{python}
 # 空间连接 (Spatial Join) 
 # 将 gdf 中的点与 london 中的区域连接
-joined = gpd.sjoin(gdf, london_wards, how='left', predicate='within')  # 表示 gdf 中的点应位于 london 区域内
+joined = gpd.sjoin(gdf, london, how='left', predicate='within')  # 表示 gdf 中的点应位于 london 区域内
 
 # 统计每个区域中的点数量
 ward_counts = joined.groupby('GSS_CODE').size()  
 
 # 将统计结果添加到 London GeoDataFrame
-london_wards['point_count'] = london_wards['GSS_CODE'].map(ward_counts)
-london_wards['point_density'] = london_wards['point_count'] / london_wards['HECTARES']
+london['point_count'] = london['GSS_CODE'].map(ward_counts)
+london['point_density'] = london['point_count'] / london_wards['HECTARES']
 
 # 绘制结果
 fig, ax = plt.subplots(figsize=(10, 6))
-london_wards.plot(ax=ax, column='point_density', cmap='OrRd', legend=True,
+london.plot(ax=ax, column='point_density', cmap='OrRd', legend=True,
             legend_kwds={'label': "Point Density per Ward"},
             edgecolor='black', linewidth=0.1)  # 设置边界线颜色和宽度
 
 # 更新标题以反映点密度
-ax.set_title('Density of Points in London Wards', fontsize=16)
+ax.set_title('Density of Points in London Boroughs', fontsize=16)
 plt.show()
 ```
 
@@ -318,14 +331,21 @@ fig = plt.figure(figsize=(16, 8))  # 设置整个图的大小
 ax1 = plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)  # 跨4行2列，显示在左侧
 
 # 绘制背景地图
-london_wards.plot(ax=ax1, color='whitesmoke', edgecolor='black')
+london.plot(ax=ax1, color='whitesmoke', edgecolor='black')
 
-# 绘制不同 room_type 的点分布
+# 获取每个 room_type 的数量
+room_counts = gdf['room_type'].value_counts()
+total_count = len(gdf)  # 总房源数
+# 获取唯一的 room_type 和颜色
 room_types = gdf['room_type'].unique()
 colors = plt.colormaps['viridis'](np.linspace(0, 1, len(room_types)))  # 生成颜色列表
+# 绘制每个 room_type
 for i, room_type in enumerate(room_types):
     subset = gdf[gdf['room_type'] == room_type]
-    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=1, label=f"{room_type} ({len(subset)})")
+    count = len(subset)
+    percentage = (count / total_count) * 100  # 计算百分比
+    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=1, 
+                label=f"{room_type} ({count}: {percentage:.1f}%)")  # 添加百分比
 
 ax1.set_title('Airbnb Houses Categorized by Room Type', fontsize=15)
 ax1.set_xlabel('Longitude')

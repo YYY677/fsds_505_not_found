@@ -189,7 +189,6 @@ ax.set_xlim([0, 500]);
 gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=gpd.points_from_xy(df.longitude, df.latitude)).to_crs(27700)
 
 london = gpd.read_file('data/London/London_Borough_Excluding_MHW.shp').to_crs(gdf.crs) # British National Grid
-
 green = gpd.read_file('data/Greenspace.gpkg').to_crs(27700)
 water = gpd.read_file('data/Water.gpkg').to_crs(27700)
 
@@ -223,7 +222,7 @@ axes[0].set_ylabel('Latitude')
 
 water.plot(facecolor='xkcd:sky blue', zorder=1, ax=axes[1], label='Water bodies')
 green.plot(facecolor=(0.5, 0.8, 0, 0.6), zorder=2, ax=axes[1], label='Green spaces')
-london.plot(edgecolor=(0.8, 0, 0, 0.5), facecolor='none', 
+london.plot(edgecolor='black', facecolor='none', 
                   linewidth=0.2, zorder=3, ax=axes[1], label='Ward boundaries')
 gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25, 
                            markersize=1, label='Listings by price', zorder=4, ax=axes[1])
@@ -231,7 +230,7 @@ gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25,
 # 设置范围
 axes[1].set_xlim(501000, 563000)
 axes[1].set_ylim(155000, 202000)
-axes[1].set_title('Map for more information', 
+axes[1].set_title('Map with more information', 
                   fontdict={'fontsize': 15, 'fontweight': '3'})
 
 # 手动创建图例条目
@@ -251,8 +250,10 @@ plt.tight_layout()
 plt.show()
 ```
 
-1. There is a apparent trend that airbnb listings are concentrated in the city center, and the number decreases as it moves into the suburbs. 
-2. Although the listings are mainly concentrated in the city centre, it is worth noting that the listings in the central area have several obvious blank areas, which we can see from the chart on the right that this is due to the distribution of green Spaces there.
+* There is a apparent trend that airbnb listings are concentrated in the city center, and the number decreases as it moves into the suburbs. 
+* Although the listings are mainly concentrated in the city centre, it is worth noting that the listings in the central area have several obvious blank areas, which we can see from the chart on the right that this is due to the distribution of green Spaces there.
+
+## 可要可不要
 
 ```{python}
 # 空间连接 (Spatial Join) 
@@ -264,7 +265,7 @@ ward_counts = joined.groupby('GSS_CODE').size()
 
 # 将统计结果添加到 London GeoDataFrame
 london['point_count'] = london['GSS_CODE'].map(ward_counts)
-london['point_density'] = london['point_count'] / london_wards['HECTARES']
+london['point_density'] = london['point_count'] / london['HECTARES']
 
 # 绘制结果
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -273,7 +274,7 @@ london.plot(ax=ax, column='point_density', cmap='OrRd', legend=True,
             edgecolor='black', linewidth=0.1)  # 设置边界线颜色和宽度
 
 # 更新标题以反映点密度
-ax.set_title('Density of Points in London Boroughs', fontsize=16)
+ax.set_title('Density of Points in London Boroughs (per hectare)', fontsize=16)
 plt.show()
 ```
 
@@ -310,13 +311,80 @@ As shown in above picuture, nearly 40 thousand hosts own 1 listing. Two and thre
 
 Given that there are about a total of 85,000 listings, it can be inferred that more than half of the hosts **own multiple properties**. **多房非法性?**
 
+```{python}
+# 确保 'host_since' 是 datetime 格式
+gdf['host_since'] = pd.to_datetime(gdf['host_since'])
+
+# 提取年份信息
+gdf['year'] = gdf['host_since'].dt.year
+
+# --- 统计每年新增的 host_id 数量 ---
+# 确保每个 host_id 只计算一次（每年新增）
+new_hosts_per_year = gdf.drop_duplicates('host_id').groupby('year').size()
+
+# --- 统计每年内的 id 数量（累积计算）---
+# 创建一个年份范围（从最早到最新）
+year_range = range(gdf['year'].min(), gdf['year'].max() + 1)
+
+# 初始化每年运营中的 id 数量
+id_per_year = [gdf[gdf['year'] <= year].shape[0] for year in year_range]
+
+# 创建 DataFrame 并显示结果
+result_df = pd.DataFrame({
+    'Year': year_range,
+    'New Hosts': new_hosts_per_year.reindex(year_range, fill_value=0),  # 填充缺失年份为0
+    'Total IDs': id_per_year
+})
+
+# 绘制图形
+fig, ax1 = plt.subplots(figsize=(12, 6))
+
+# --- 绘制新增 host 数量（柱状图）---
+ax1.bar(result_df['Year'], result_df['New Hosts'], color='blue', label='New Hosts per Year')
+ax1.set_xlabel('Year')
+ax1.set_ylabel('New Hosts', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+
+# --- 创建第二个 y 轴，绘制累计 id 数量（折线图）---
+ax2 = ax1.twinx()
+ax2.plot(result_df['Year'], result_df['Total IDs'], color='orange', marker='o', label='Total IDs')
+ax2.set_ylabel('Listings count', color='orange')
+ax2.tick_params(axis='y', labelcolor='orange')
+
+# --- 添加图例 ---
+fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9))
+
+# --- 设置标题 ---
+plt.title('Yearly New Hosts and Listings on Airbnb in London')
+
+# --- 显示图形 ---
+plt.tight_layout()
+plt.show()
+```
+
+
 ### 6.3 Analysis of property types
 
 ```{python}
 #london['point_count'].sort_values()
 #london.sort_values(by='point_count', ascending=True).head(50)
 # london
-gdf.host_listings_count.sort_values()
+
+# gdf.host_listings_count.sort_values()
+
+gdf.info()
+gdf.iloc[:,0:13]
+# gdf.iloc[:,17:31]
+```
+
+```{python}
+# unique = gdf.drop_duplicates(subset='host_id')
+# unique.iloc[:,5:13]
+
+# gdf[gdf['host_name'] == 'Blueground'].iloc[:,5:13]
+
+# gdf[gdf['host_id'] == 314162972].iloc[:,5:13]
+gdf[gdf['host_id'] == 439074505].iloc[:,5:13]
 ```
 
 ```{python}
@@ -328,7 +396,7 @@ import matplotlib.patches as mpatches
 fig = plt.figure(figsize=(16, 8))  # 设置整个图的大小
 
 # --- 第一个子图: 房源类型分布地图 ---
-ax1 = plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)  # 跨4行2列，显示在左侧
+ax1 = plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)  # 跨4行2列，显示在左侧
 
 # 绘制背景地图
 london.plot(ax=ax1, color='whitesmoke', edgecolor='black')
@@ -344,7 +412,7 @@ for i, room_type in enumerate(room_types):
     subset = gdf[gdf['room_type'] == room_type]
     count = len(subset)
     percentage = (count / total_count) * 100  # 计算百分比
-    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=1, 
+    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=0.3, 
                 label=f"{room_type} ({count}: {percentage:.1f}%)")  # 添加百分比
 
 ax1.set_title('Airbnb Houses Categorized by Room Type', fontsize=15)
@@ -353,7 +421,7 @@ ax1.set_ylabel('Latitude')
 ax1.legend(title='Room Type', fontsize=10)
 
 # --- 第二个子图: 按 property_type 绘制柱状图 ---
-ax2 = plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)  # 跨4行2列，显示在右侧
+ax2 = plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)  # 跨4行2列，显示在右侧
 
 # 统计每种 property_type 的数量
 property_counts = gdf['property_type'].value_counts()
@@ -377,46 +445,87 @@ plt.tight_layout()
 plt.show()
 ```
 
-1. For property type
->The high proportion of the Entire rental unit and the entire home shows that renters are more inclined to choose houses with complete privacy.
+* The high proportion of entire home listings indicates that Airbnb in London is becoming increasingly commercialized, with many properties likely dedicated specifically for rental purposes rather than occasional letting of spare space by hosts.
 
->The popularity of Private rooms reflects the demand for budget or short-term accommodation. Tenants are willing to share space with landlords or other residents, but still expect some privacy.
+* As a major tourist destination, visitors to London tend to prefer entire homes to enjoy greater comfort and privacy, especially families or groups of travelers.
 
-2. For room type
+* The significant proportion of private rooms suggests that the Airbnb platform continues to cater to guests with different budgets and needs, particularly solo travelers or those who prefer interaction with hosts.
+
+* The low numbers of shared rooms and hotel rooms may be related to local regulations and Airbnb's market positioning. For example, hotels may face regulatory restrictions, while shared rooms are less popular due to privacy concerns.
+
+```{python}
+# 创建并列的子图
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))  # 1行2列的子图
+
+# 设置分箱：从 0 到 1000 每 25 一个分箱
+bins = list(range(0, 1125, 25))
+
+# 将超过 1000 的价格限制在 1000
+price_clipped = np.where(gdf['price'] > 1000, 1000, gdf['price'])
+
+# 计算直方图数据
+counts, bin_edges, _ = axes[0].hist(price_clipped, bins=bins, color='skyblue', edgecolor='black')
+
+# 设置标题和标签
+axes[0].set_title('Distribution of Price (≤1000 per night, 1000+)', fontsize=15)
+axes[0].set_xlabel('Price')
+axes[0].set_ylabel('Count')
+
+# 自定义 x 轴标签，每 100 显示一次，最后一个显示 1000+
+x_labels = [str(i) for i in range(0, 1000, 100)] + ['1000+']
+axes[0].set_xticks(range(0, 1100, 100))
+axes[0].set_xticklabels(x_labels)
+
+# 添加右侧 y 轴显示百分比
+ax_right = axes[0].twinx()  # 创建双轴
+ax_right.set_ylabel('Percentage')
+
+# 计算百分比并设置右侧 y 轴刻度
+total_counts = sum(counts)
+percentages = (counts / total_counts) * 100
+ax_right.set_ylim(0, max(percentages))  # 设置与左侧 y 轴对齐的百分比范围
+ax_right.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
+
+
+# 将超过 35 天的值设置为 35 天
+gdf['minimum_nights_clipped'] = np.where(gdf['minimum_nights'] > 35, 35, gdf['minimum_nights'])
+bins = list(range(1, 37))  # 1 到 35 每天一个 bin，35+ 合并为一格
+
+# 绘制 minimum_nights 列的直方图
+axes[1].hist(gdf['minimum_nights_clipped'], bins=bins, color='lightblue', edgecolor='black')
+
+# 添加阈值线 (在 30 天位置)
+axes[1].axvline(x=30, color='black', linestyle='--', linewidth=1.5, label='STR Threshold (30 days)')
+
+# 计算 30 天阈值之前的比例
+threshold = 30
+below_threshold = gdf[gdf['minimum_nights'] <= threshold].shape[0]  # 30天内的数量
+total_entries = gdf.shape[0]  # 总数量
+percentage_below = (below_threshold / total_entries) * 100
+
+# 在图上显示百分比信息
+axes[1].text(18, axes[1].get_ylim()[1] * 0.8,  # 设置位置
+             f'{below_threshold} listings ({percentage_below:.1f}%) below 30 nights',
+             fontsize=12, color='black', ha='center', bbox=dict(facecolor='white', alpha=0.6))
+
+# 设置标题和标签
+axes[1].set_title('Distribution of Minimum Nights', fontsize=15)
+axes[1].set_xlabel('Minimum Nights')
+axes[1].set_ylabel('Count')
+axes[1].legend()
+
+# 设置 x 轴刻度和标签
+x_ticks = list(range(1, 8)) + list(range(10, 36, 5))  # 前7天每天显示, 10到35天每5天显示
+x_labels = [str(i) for i in x_ticks[:-1]] + ['35+']  # 定义刻度标签
+axes[1].set_xticks(x_ticks)
+axes[1].set_xticklabels(x_labels)
+
+# 显示图形
+plt.tight_layout()
+plt.show()
+```
+
 > ...
-
-```{python}
-london_wards
-```
-
-```{python}
-df.info()
-df.isna().sum()
-```
-
-```{python}
-# selected_list = ['host_id','host_name','host_since','host_location','host_is_superhost','host_listings_count','host_total_listings_count','host_verifications']
-selected_list = [
-    "host_since",
-    "host_location",
-    "host_is_superhost",
-    "host_listings_count",
-    "host_total_listings_count",
-    "host_verifications",
-    "property_type",
-    "room_type",
-    "accommodates",
-    'beds'
-]
-df.sample(10, random_state=42)[selected_list]
-# df.sample(10, random_state=42)[selected_list].info()
-
-# df[df['host_location'].isna()]
-# df.isna().sum(axis=0).sort_values(ascending=False) #by column
-
-# probs = df.isna().sum(axis=1) #by row
-# probs.plot.hist(bins=30)
-```
 
 ## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London? 
 

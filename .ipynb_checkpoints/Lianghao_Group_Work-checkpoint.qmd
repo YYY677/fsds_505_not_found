@@ -19,9 +19,6 @@ format:
     include-in-header:
       text: |
         \addtokomafont{disposition}{\rmfamily}
-    mainfont: Spectral
-    sansfont: Roboto Flex
-    monofont: InputMonoCondensed
     papersize: a4
     geometry:
       - top=25mm
@@ -56,6 +53,68 @@ import matplotlib.pyplot as plt
 ```
 
 ```{python}
+def check_cache(f):
+    @wraps(f)
+    def wrapper(src, dst, min_size=100):
+        url = urlparse(src) # We assume that this is some kind of valid URL 
+        fn  = os.path.split(url.path)[-1] # Extract the filename
+        dsn = os.path.join(dst,fn) # Destination filename
+        if os.path.isfile(dsn) and os.path.getsize(dsn) > min_size:
+            print(f"+ {dsn} found locally!")
+            return(dsn)
+        else:
+            print(f"+ {dsn} not found, downloading!")
+            return(f(src, dsn))
+    return wrapper
+
+@check_cache
+def cache_data(src:str, dst:str) -> str:
+    """Downloads a remote file.
+    
+    The function sits between the 'read' step of a pandas or geopandas
+    data frame and downloading the file from a remote location. The idea
+    is that it will save it locally so that you don't need to remember to
+    do so yourself. Subsequent re-reads of the file will return instantly
+    rather than downloading the entire file for a second or n-th itme.
+    
+    Parameters
+    ----------
+    src : str
+        The remote *source* for the file, any valid URL should work.
+    dst : str
+        The *destination* location to save the downloaded file.
+        
+    Returns
+    -------
+    str
+        A string representing the local location of the file.
+    """
+
+    # Convert the path back into a list (without)
+    # the filename -- we need to check that directories
+    # exist first.
+    path = os.path.split(dst)[0]
+    print(f"Path: {path}")
+      
+    # Create any missing directories in dest(ination) path
+    # -- os.path.join is the reverse of split (as you saw above)
+    # but it doesn't work with lists... so I had to google how
+    # to use the 'splat' operator! os.makedirs creates missing
+    # directories in a path automatically.
+    if path != '':
+        os.makedirs(path, exist_ok=True)
+        
+    # Download and write the file
+    with open(dst, "wb") as file:
+        response = get(src)
+        file.write(response.content)
+        
+    print(' + Done downloading...')
+
+    return dst
+```
+
+```{python}
 #| echo: false
 host = "https://orca.casa.ucl.ac.uk"
 path = "~jreades/data"
@@ -68,6 +127,7 @@ else:
     df.to_parquet(file)
 df.shape
 ```
+
 
 ## Declaration of Authorship {.unnumbered .unlisted}
 
@@ -214,6 +274,13 @@ london.plot(ax=axes[0], color='whitesmoke', edgecolor='black')
 gdf.plot(ax=axes[0], color='black', marker='o', markersize=1)
 axes[0].set_title('The distribution of Airbnb houses in London',
                   fontdict={'fontsize': 15, 'fontweight': '3'})
+
+#取消边框
+axes[0].spines['top'].set_visible(False)
+axes[0].spines['right'].set_visible(False)
+axes[0].spines['bottom'].set_visible(False)
+axes[0].spines['left'].set_visible(False)
+
 axes[0].set_xlabel('Longitude')
 axes[0].set_ylabel('Latitude')
 
@@ -226,6 +293,12 @@ london.plot(edgecolor='black', facecolor='none',
                   linewidth=0.2, zorder=3, ax=axes[1], label='Ward boundaries')
 gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25, 
                            markersize=1, label='Listings by price', zorder=4, ax=axes[1])
+
+#取消边框
+axes[1].spines['top'].set_visible(False)
+axes[1].spines['right'].set_visible(False)
+axes[1].spines['bottom'].set_visible(False)
+axes[1].spines['left'].set_visible(False)
 
 # 设置范围
 axes[1].set_xlim(501000, 563000)
@@ -290,12 +363,20 @@ labels = ['1', '2', '3-5', '6-10', '11-20', '21-50', '51-100', '101-200', '201-5
 # 使用 pd.cut() 将数据分组
 gdf['listings_range'] = pd.cut(gdf['host_listings_count'], bins=bins, labels=labels, right=True)
 
-# 统计每个分组的数量
+# 统计每个分组的数量和总数
 range_counts = gdf['listings_range'].value_counts().sort_index()
+total_hosts = range_counts.sum()
+
+# 计算百分比
+percentages = (range_counts / total_hosts) * 100
 
 # 绘制柱状图
-plt.figure(figsize=(10, 3))
-range_counts.plot(kind='bar', color='lightblue')
+plt.figure(figsize=(8, 6))
+ax = range_counts.plot(kind='bar', color='lightblue')
+
+# 在柱状图上添加百分比标签
+for i, (count, pct) in enumerate(zip(range_counts, percentages)):
+    plt.text(i, count + 0.5, f'{pct:.1f}%', ha='center', va='bottom', fontsize=10)
 
 # 添加标题和标签
 plt.title('Number of Hosts by Listings Count Range')
@@ -362,6 +443,74 @@ plt.tight_layout()
 plt.show()
 ```
 
+```{python}
+# 定义分组范围（例如 0-1, 2-5, 6-10, 11-20, 21+）
+bins = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, float('inf')]  # 更细化的分组区间
+labels = ['1', '2', '3-5', '6-10', '11-20', '21-50', '51-100', '101-200', '201-500', '501+']  # 为每个区间指定标签
+
+# 使用 pd.cut() 将数据分组
+gdf['listings_range'] = pd.cut(gdf['host_listings_count'], bins=bins, labels=labels, right=True)
+
+# 统计每个分组的数量和总数
+range_counts = gdf['listings_range'].value_counts().sort_index()
+total_hosts = range_counts.sum()
+percentages = (range_counts / total_hosts) * 100
+
+# 确保 'host_since' 是 datetime 格式
+gdf['host_since'] = pd.to_datetime(gdf['host_since'])
+gdf['year'] = gdf['host_since'].dt.year
+
+# 统计每年新增的 host_id 数量
+new_hosts_per_year = gdf.drop_duplicates('host_id').groupby('year').size()
+
+# 初始化每年运营中的 id 数量
+year_range = range(gdf['year'].min(), gdf['year'].max() + 1)
+id_per_year = [gdf[gdf['year'] <= year].shape[0] for year in year_range]
+
+# 创建结果 DataFrame
+result_df = pd.DataFrame({
+    'Year': year_range,
+    'New Hosts': new_hosts_per_year.reindex(year_range, fill_value=0),
+    'Total IDs': id_per_year
+})
+
+# 创建一行两列的子图
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))  # 1行2列
+
+# --- 第一个子图：每个分组的数量和百分比 ---
+
+ax1.set_title('Number of Hosts by Listings Count Range')
+ax1.set_xlabel('Listings Count Range')
+ax1.set_ylabel('Number of Hosts')
+
+range_counts.plot(kind='bar', color='lightblue', ax=ax1)
+ax1.set_xticklabels(range_counts.index, rotation=45)
+
+# 添加百分比标签
+for i, (count, pct) in enumerate(zip(range_counts, percentages)):
+    ax1.text(i, count + 0.5, f'{pct:.1f}%', ha='center', va='bottom', fontsize=10)
+
+# --- 第二个子图：新增和累计 host 数量 ---
+# 新增 hosts 柱状图
+ax2.bar(result_df['Year'], result_df['New Hosts'], color='blue', label='New Hosts per Year')
+ax2.set_xlabel('Year')
+ax2.set_ylabel('New Hosts', color='blue')
+ax2.tick_params(axis='y', labelcolor='blue')
+
+# 累计 hosts 折线图
+ax3 = ax2.twinx()  # 共享 x 轴的第二个 y 轴
+ax3.plot(result_df['Year'], result_df['Total IDs'], color='orange', marker='o', label='Total Listings')
+ax3.set_ylabel('Total Listings', color='orange')
+ax3.tick_params(axis='y', labelcolor='orange')
+
+# 添加图例
+ax2.legend(loc='upper left')
+ax3.legend(loc='upper right')
+
+# --- 调整布局 ---
+plt.tight_layout()
+plt.show()
+```
 
 ### 6.3 Analysis of property types
 
@@ -524,6 +673,10 @@ axes[1].set_xticklabels(x_labels)
 plt.tight_layout()
 plt.show()
 ```
+
+[@dignazio:2020], [@HofmannTess2020AiNY] 测试一下
+[@McDonoughAnnie2019NYCf]
+[@SeilerMichaelJ.2024AonA]
 
 > ...
 

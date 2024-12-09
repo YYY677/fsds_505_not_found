@@ -60,38 +60,74 @@ import shutil
 ```
 
 ```{python}
+# This code chunk is to check if the whole data file exists already. If not, down from remote repository.
+
 # configuration parameter
 GITHUB_ZIP_URL = "https://github.com/YYY677/fsds_505_not_found/archive/refs/heads/master.zip"
 TARGET_FOLDER = "fsds_505_not_found-master/data"  # GitHub path
 LOCAL_FOLDER = "./data"  # local file path
 
-# check if it exists already
-if os.path.exists(LOCAL_FOLDER):
-    print(f"The folder '{LOCAL_FOLDER}' already exists locally.")
-else:
-    # download zip file from github
-    zip_path = "repo.zip"
-    print("Downloading the repository ZIP file...")
-    response = requests.get(GITHUB_ZIP_URL)
-    
-    with open(zip_path, "wb") as f:
-        f.write(response.content)
-    
-    print("Extracting the ZIP file...")
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(".")
-    
-    #remove file
-    print("Moving the target folder to the desired location...")
-    shutil.move(TARGET_FOLDER, LOCAL_FOLDER)
-    
-    # delete temporary files
-    os.remove(zip_path)
-    shutil.rmtree("fsds_505_not_found-master")
-    print(f"The folder has been downloaded to '{LOCAL_FOLDER}'.")
+try:
+    # check if the folder already exists
+    if os.path.exists(LOCAL_FOLDER):
+        print(f"The folder '{LOCAL_FOLDER}' already exists locally.")
+    else:
+        # download zip file from GitHub
+        zip_path = "repo.zip"
+        print("Downloading the repository ZIP file...")
+        try:
+            response = requests.get(GITHUB_ZIP_URL, timeout=30)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading the ZIP file: {e}")
+            exit(1)
+
+        # write the ZIP file locally
+        try:
+            with open(zip_path, "wb") as f:
+                f.write(response.content)
+        except IOError as e:
+            print(f"Error saving the ZIP file: {e}")
+            exit(1)
+
+        # extract the ZIP file
+        print("Extracting the ZIP file...")
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(".")
+        except zipfile.BadZipFile as e:
+            print(f"Error extracting the ZIP file: {e}")
+            os.remove(zip_path)
+            exit(1)
+
+        # move the target folder to the desired location
+        print("Moving the target folder to the desired location...")
+        try:
+            shutil.move(TARGET_FOLDER, LOCAL_FOLDER)
+        except FileNotFoundError as e:
+            print(f"Error moving the folder: {e}")
+            exit(1)
+        except shutil.Error as e:
+            print(f"Error during folder move: {e}")
+            exit(1)
+
+        # clean up temporary files
+        print("Cleaning up temporary files...")
+        try:
+            os.remove(zip_path)
+            shutil.rmtree("fsds_505_not_found-master")
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+            # Not exiting here as the main task is complete
+
+        print(f"The folder has been successfully downloaded to '{LOCAL_FOLDER}'.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
 ```
 
 ```{python}
+# This chunk is to down seperate files from remote repo.
+
 def download_file(url, save_path):
     """
     Downloads a file from the given URL and saves it to the specified local path.
@@ -143,7 +179,7 @@ df.shape
 
 ## Declaration of Authorship {.unnumbered .unlisted}
 
-We, [insert your group's names], pledge our honour that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+We, `505 not found`, pledge our honour that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
 
 Date:
 
@@ -259,18 +295,13 @@ ax.set_xlim([0, 500]);
 :::
 
 ```{python}
+# convert df(pandas) file to gdf(geopandas, which contains spatial column)
 gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=gpd.points_from_xy(df.longitude, df.latitude)).to_crs(27700)
 
+# read data files
 london = gpd.read_file('data/London/London_Borough_Excluding_MHW.shp').to_crs(gdf.crs) # British National Grid
 green = gpd.read_file('data/Greenspace.gpkg').to_crs(27700)
 water = gpd.read_file('data/Water.gpkg').to_crs(27700)
-
-#london.plot()
-# london
-```
-
-```{python}
-london
 ```
 
 ### 6.1 Location of Airbnb listings in London
@@ -338,33 +369,6 @@ plt.show()
 
 * There is a apparent trend that airbnb listings are concentrated in the city center, and the number decreases as it moves into the suburbs. 
 * Although the listings are mainly concentrated in the city centre, it is worth noting that the listings in the central area have several obvious blank areas, which we can see from the chart on the right that this is due to the distribution of green Spaces there.
-
-## 可要可不要
-
-```{python}
-# 空间连接 (Spatial Join) 
-# 将 gdf 中的点与 london 中的区域连接
-joined = gpd.sjoin(gdf, london, how='left', predicate='within')  # 表示 gdf 中的点应位于 london 区域内
-
-# 统计每个区域中的点数量
-ward_counts = joined.groupby('GSS_CODE').size()  
-
-# 将统计结果添加到 London GeoDataFrame
-london['point_count'] = london['GSS_CODE'].map(ward_counts)
-london['point_density'] = london['point_count'] / london['HECTARES']
-
-# 绘制结果
-fig, ax = plt.subplots(figsize=(10, 6))
-london.plot(ax=ax, column='point_density', cmap='OrRd', legend=True,
-            legend_kwds={'label': "Point Density per Ward"},
-            edgecolor='black', linewidth=0.1)  # 设置边界线颜色和宽度
-
-# 更新标题以反映点密度
-ax.set_title('Density of Points in London Boroughs (per hectare)', fontsize=16)
-plt.show()
-```
-
-`This confirms the previously observed phenomenon: while listings are primarily concentrated in the city center, there are still some areas within the center with relatively few listings.`
 
 ### 6.2 Analysis of Hosts
 

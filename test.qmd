@@ -204,35 +204,15 @@ See the raw file for examples of how to hide computational output as there is co
 
 ::: {.duedate}
 
-( 2 points; Answer due Week 7 )
-
-As a mission driven, grassroots project, Inside Airbnb relies on the generous support of collaborators who choose to contribute to the project.
-
-1. Murray Cox. Murray is a community artist and activist who uses data, media and technology for social change. He is the founder and current chief data activist of Inside Airbnb.
-2. John Morris. John, an artist and designer, was a founding collaborator who designed and re-designed the website, and is the creative producer of the project's major reports.
-3. Taylor Higgins. Taylor is working on her masters in Florence, Italy at the Scuola di Economia e Statistiche (School of Economics and Statistics) at the Università degli Studi di Firenze with a focus on designing sustainable tourism systems. Taylor is working to build and organise the data and activist communities of Inside Airbnb.
-
-
+Inside Airbnb data was collected by Murray Cox, a data activist and the project's founder, John Morris, the website designer and report producer, and Taylor Higgins, a master's student focusing on sustainable tourism at the Università degli Studi di Firenze.
 
 :::
-
-An inline citation example: As discussed on @insideairbnb, there are many...
-
-A parenthetical citation example: There are many ways to research Airbnb [see, for example, @insideairbnb]... 
-
 
 ## 2. Why did they collect the InsideAirbnb data?
 
 ::: {.duedate}
 
-( 4 points; Answer due Week 7 )
-
-Inside Airbnb is a mission driven project that provides data and advocacy about Airbnb's impact on residential communities.
-
-"We work towards a vision where communities are empowered with data and information to understand, decide and control the role of renting residential homes to tourists."
-
-
-
+The purpose of InsideAirbnb data is to provide data-driven insights into the impact of Airbnb on residential housing markets, thereby contributing to public discourse on the regulation and effects of short-term rental platforms in urban areas.
 
 :::
 
@@ -240,24 +220,23 @@ Inside Airbnb is a mission driven project that provides data and advocacy about 
 
 ::: {.duedate}
 
-( 5 points; Answer due Week 8 )
+The data is collected by utilizing web scraping techniques such as self-made bots, inside Airbnb and AirDNA [@Pawlicz2021UNDERSTANDINGSR] [@Prentice2023AddressingDQ] to extract publicly available information from Airbnb’s website, focusing on various aspects of listings such as location, price, availability, and host details. This approach allows for the assembly of comprehensive datasets, which are then cleansed and organized to facilitate thorough analysis.
 
 :::
 
-
-## 3. How did they collect it?
-
-::: {.duedate}
-
-( 5 points; Answer due Week 8 )
-
-:::
 
 ## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
 
 ::: {.duedate}
 
-( 11 points; Answer due Week 9 )
+The data collection method used by InsideAirbnb raises data quality issues, mainly related to data incompleteness, reliance on website structure, and technical challenges. In terms of accuracy, data is automatically retrieved from the website, which possess the risk of capturing inaccurate or outdated information due to the dynamic nature of web content [@krotov2023big].
+
+In addition, due to privacy measures, the geographic coordinates provided by Airbnb may not reflect the exact location of the listing, which adds a layer of inaccuracy. And as web scraping depends heavily on the structure of the Airbnb website. Changes to the website layout or measures to block scraping activities may disrupt data collection efforts, like Airbnb's anti-scrap measures including CAPTCHA or IP bans, pose additional challenges [@Prentice2023AddressingDQ]. This burdens data analysts by requiring them to constantly develop and maintain scraping scripts. 
+
+In the discussion of the structure of InsideAirbnb data, it contains all aspects of the Airbnb market, including the distribution and characteristics of listings, pricing models, and the impact of Airbnb on the local housing market. And it is a relatively complete dataset and can assist with comprehensive analysis study.
+
+Besides the accuracy concerns, the use of InsideAirbnb data raises technical, legal, and ethical issues.
+Legally, as discussed in Sobel [@sobel2021new], scraping faces challenges in different jurisdictions, depending on how it intersects with privacy laws and terms of service agreements. This could affect the legality of the Inside Airbnb data collection process, especially if it violates Airbnb’s terms of service. Scraping also raises ethical issues, particularly regarding the consent of data subjects (Airbnb hosts and guests) whose information is collected without explicit permission. This raises significant privacy issues, as highlighted in the study by Xie and Karan [@xie2019consumers], where users’ awareness and concerns about how their data is used influence their privacy management behaviours.
 
 :::
 
@@ -265,9 +244,22 @@ Inside Airbnb is a mission driven project that provides data and advocacy about 
 
 ::: {.duedate}
 
-( 18 points; Answer due {{< var assess.group-date >}} )
+The use of the InsideAirbnb database does raise several ethical considerations.
+
+Firstly, there are issues of legal compliance. Web scraping can conflict with legal standards and ethical norms, particularly when data is collected without explicit consent, potentially leading to legal actions [@krotov2023big].
+
+Secondly, privacy concerns for individuals must be addressed. Although the data might be publicly accessible, individuals typically do not anticipate their rental information being extensively aggregated and analyzed [@brenning2023web].
+
+In many instances, data subjects (hosts and guests) are neither directly informed nor asked for consent when their data is scraped and analyzed. This presents a significant ethical dilemma: using their information without explicit permission, especially when such data might be utilized to draw conclusions or influence policies that could directly impact them.
+
+Moreover, there is the issue of how policymaking might be influenced by the data. Since the scraped data can contain errors, issues with accuracy and potential misrepresentation may lead to misleading conclusions that could negatively affect Airbnb hosts, guests, and policy decisions.
+
+Additionally, the misuse of data poses a significant ethical concern. When analyzing Inside Airbnb data, it is crucial to ensure that the data is not used for purposes unintended by the original data providers, such as market manipulation, unfair competition, or research that adversely impacts hosts and guests.
+
+Lastly, transparency and accountability are crucial. Ethical research involving data scraping should clearly disclose its methodologies, the specific data collected, and how this data is utilized. Such transparency is especially important for accountability, particularly if the research has the potential to influence public opinion or policy [@brenning2023web].
 
 :::
+
 
 
 ## 6. With reference to the InsideAirbnb data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and the types of properties that they list suggest about the nature of Airbnb lettings in London? 

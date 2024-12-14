@@ -1,0 +1,944 @@
+---
+bibliography: bio.bib
+csl: harvard-cite-them-right.csl
+title: Group Name's Group Project
+execute:
+  echo: false
+  freeze: true
+format:
+  html:
+    code-copy: true
+    code-link: true
+    toc: true
+    toc-title: On this page
+    toc-depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  pdf:
+    include-in-header:
+      text: |
+        \addtokomafont{disposition}{\rmfamily}
+    papersize: a4
+    geometry:
+      - top=25mm
+      - left=40mm
+      - right=30mm
+      - bottom=25mm
+      - heightrounded
+    toc: false
+    number-sections: false
+    colorlinks: true
+    highlight-style: github
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.4
+  kernelspec:
+    display_name: Python (base)
+    language: python
+    name: base
+---
+
+```{python}
+#| echo: false
+
+'''
+explanation: '| echo: false' means not showing source code, and 
+            '| output: false' means not showing output of that code chunk (print, plt.show(), etc.)
+And these should be placed in the first row of each code chunk.
+'''
+
+# import library used in this qmd file
+import os
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+from requests import get
+import requests
+from urllib.parse import urlparse
+from functools import wraps
+import zipfile
+import shutil
+```
+
+```{python}
+#| output: false
+
+# Download the whole data file from remote repository:
+
+# configuration parameter
+GITHUB_ZIP_URL = "https://github.com/YYY677/fsds_505_not_found/archive/refs/heads/master.zip"
+TARGET_FOLDER = "fsds_505_not_found-master/data"  # GitHub path
+LOCAL_FOLDER = "./data"  # local file path
+
+try:
+    # check if the folder already exists
+    if os.path.exists(LOCAL_FOLDER):
+        print(f"The folder '{LOCAL_FOLDER}' already exists locally.")
+    else:
+        # download zip file from GitHub
+        zip_path = "repo.zip"
+        print("Downloading the repository ZIP file...")
+        try:
+            response = requests.get(GITHUB_ZIP_URL, timeout=30)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading the ZIP file: {e}")
+            exit(1)
+
+        # write the ZIP file locally
+        try:
+            with open(zip_path, "wb") as f:
+                f.write(response.content)
+        except IOError as e:
+            print(f"Error saving the ZIP file: {e}")
+            exit(1)
+
+        # extract the ZIP file
+        print("Extracting the ZIP file...")
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(".")
+        except zipfile.BadZipFile as e:
+            print(f"Error extracting the ZIP file: {e}")
+            os.remove(zip_path)
+            exit(1)
+
+        # move the target folder to the desired location
+        print("Moving the target folder to the desired location...")
+        try:
+            shutil.move(TARGET_FOLDER, LOCAL_FOLDER)
+        except FileNotFoundError as e:
+            print(f"Error moving the folder: {e}")
+            exit(1)
+        except shutil.Error as e:
+            print(f"Error during folder move: {e}")
+            exit(1)
+
+        # clean up temporary files
+        print("Cleaning up temporary files...")
+        try:
+            os.remove(zip_path)
+            shutil.rmtree("fsds_505_not_found-master")
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+            # Not exiting here as the main task is complete
+
+        print(f"The folder has been successfully downloaded to '{LOCAL_FOLDER}'.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+```
+
+```{python}
+#| output: false
+
+# This chunk is to down seperate files from remote repo:
+
+def download_file(url, save_path):
+    """
+    Downloads a file from the given URL and saves it to the specified local path.
+    """
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(save_path, 'wb') as file:
+            file.write(response.content)
+        print(f"Download completed: {save_path}")
+    else:
+        print(f"Download failed with HTTP status code {response.status_code}, URL: {url}")
+
+def check_and_download(url, local_path):
+    """
+    Checks if a file exists locally; if not, downloads it from the given URL.
+    """
+    if not os.path.exists(local_path):
+        print(f"File does not exist. Downloading: {local_path}")
+        download_file(url, local_path)
+    else:
+        print(f"File already exists: {local_path}")
+
+# URLs and corresponding local save paths
+url_csl = 'https://raw.githubusercontent.com/YYY677/fsds_505_not_found/master/harvard-cite-them-right.csl'
+url_bib = 'https://raw.githubusercontent.com/YYY677/fsds_505_not_found/master/bio.bib'
+
+# Specify local file paths
+local_csl = "harvard-cite-them-right.csl"
+local_bib = "bio.bib"
+
+# Check and download the files
+check_and_download(url_csl, local_csl)
+check_and_download(url_bib, local_bib)
+```
+
+```{python}
+#| echo: false
+#| output: false
+
+host = "https://orca.casa.ucl.ac.uk"
+path = "~jreades/data"
+file = "20240614-London-listings.parquet"
+
+if os.path.exists(file):
+    df = pd.read_parquet(file)
+else:
+    df = pd.read_parquet(f"{host}/{path}/{file}")
+    df.to_parquet(file)
+df.shape
+```
+
+## Declaration of Authorship {.unnumbered .unlisted}
+
+We, `505 not found`, pledge our honour that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+
+Date:
+
+Student Numbers: 
+
+## Brief Group Reflection
+
+| What Went Well | What Was Challenging |
+| -------------- | -------------------- |
+| A              | B                    |
+| C              | D                    |
+
+## Priorities for Feedback
+
+Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
+
+{{< pagebreak >}}
+
+# Response to Questions
+
+See the raw file for examples of how to hide computational output as there is code hidden here.
+
+## 1. Who collected the InsideAirbnb data?
+
+::: {.duedate}
+
+( 2 points; Answer due Week 7 )
+
+As a mission driven, grassroots project, Inside Airbnb relies on the generous support of collaborators who choose to contribute to the project.
+
+1. Murray Cox. Murray is a community artist and activist who uses data, media and technology for social change. He is the founder and current chief data activist of Inside Airbnb.
+2. John Morris. John, an artist and designer, was a founding collaborator who designed and re-designed the website, and is the creative producer of the project's major reports.
+3. Taylor Higgins. Taylor is working on her masters in Florence, Italy at the Scuola di Economia e Statistiche (School of Economics and Statistics) at the Università degli Studi di Firenze with a focus on designing sustainable tourism systems. Taylor is working to build and organise the data and activist communities of Inside Airbnb.
+
+
+
+:::
+
+An inline citation example: As discussed on @insideairbnb, there are many...
+
+A parenthetical citation example: There are many ways to research Airbnb [see, for example, @insideairbnb]... 
+
+
+## 2. Why did they collect the InsideAirbnb data?
+
+::: {.duedate}
+
+( 4 points; Answer due Week 7 )
+
+Inside Airbnb is a mission driven project that provides data and advocacy about Airbnb's impact on residential communities.
+
+"We work towards a vision where communities are empowered with data and information to understand, decide and control the role of renting residential homes to tourists."
+
+
+
+
+:::
+
+```{python}
+#| output: asis
+print(
+    f"One of way to embed output in the text looks like this: after cleaning, we were left with {df.shape[0]:,} rows of data."
+)
+```
+
+This way is also supposed to work (`{python} f"{df.shape[0]:,}" `) but I've found it less reliable.
+
+```{python}
+ax = df.host_listings_count.plot.hist(bins=50)
+ax.set_xlim([0, 500]);
+```
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
+## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
+
+::: {.duedate}
+
+( 11 points; Answer due Week 9 )
+
+:::
+
+## 5. What ethical considerations does the use of the InsideAirbnb data raise? 
+
+::: {.duedate}
+
+( 18 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+
+## 6. With reference to the InsideAirbnb data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and the types of properties that they list suggest about the nature of Airbnb lettings in London? 
+
+`Data: the latest airbnb dataset for london published on 06 September 2024.`
+
+### 6.1 Analysis of Hosts
+
+```{python}
+# read the latest airbnb listings dataset
+df22 = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
+
+```{python}
+#| output: false
+
+#expand count limitation of column display
+pd.options.display.max_columns = 75 
+
+# df22.info()
+```
+
+```{python}
+# convert df(pandas) file to gdf(geopandas, which contains spatial column)
+gdf = gpd.GeoDataFrame(df22, crs='EPSG:4326', geometry=gpd.points_from_xy(df22.longitude, df22.latitude)).to_crs(27700)
+
+gdf = gdf[['host_since', 'host_id', 'host_listings_count', 'property_type', 'room_type', 'price', 'minimum_nights']]
+# gdf.info()
+```
+
+```{python}
+#| output: false
+
+# This code chunk is about Wrangling Data
+
+# Ensure 'host_since' is in datetime format
+gdf['host_since'] = pd.to_datetime(gdf['host_since'], errors='coerce')
+# Drop rows with NaT in 'host_since'
+gdf = gdf.dropna(subset=['host_since'])
+
+# Extract the year from 'host_since'
+gdf['year'] = gdf['host_since'].dt.year.fillna(-1).astype(int)
+
+# Handle missing values in 'host_listings_count'
+gdf['host_listings_count'] = gdf['host_listings_count'].fillna(-1).astype(int)
+
+# Clean 'price' column and convert it to float
+gdf['price'] = gdf['price'].astype(str)
+gdf['price'] = gdf['price'].str.replace('$','', regex=False).str.replace(',','', regex=False).astype(float).fillna(-1)
+
+# Convert 'property_type' and 'room_type' to categorical data types
+gdf['property_type'] = gdf['property_type'].astype('category')
+gdf['room_type'] = gdf['room_type'].astype('category')
+
+# gdf.head()
+```
+
+```{python}
+#| output: false
+
+gdf.info()
+gdf['year'].min()
+```
+
+#### 6.1.1 Distribution of the Number of Listings per Host
+
+```{python}
+#| output: false
+
+# This code chunk is to look at 'Distribution of the Number of Listings per Host'.
+
+# Group by 'host_id' to count the number of listings per host
+host_counts = gdf.groupby('host_id').size()
+
+# Define bins and labels for the grouping
+bins = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, float('inf')]  # 分组区间
+labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+']  # 分组标签
+
+# Group the host counts into bins
+host_counts_bins = pd.cut(host_counts, bins=bins, labels=labels, right=True)
+
+# Count total listings per group (number * number of listings per host)
+listings_per_group = host_counts.groupby(host_counts_bins).apply(lambda x: (x * x.index.to_series().value_counts()).sum())
+
+# Calculate total number of listings
+total_listings = listings_per_group.sum()
+percentages = (listings_per_group / total_listings) * 100
+
+# Plotting the bar chart
+plt.figure(figsize=(8, 6))
+bars = plt.bar(listings_per_group.index, listings_per_group.values, color='skyblue')
+
+# Add labels with counts and percentages
+for bar, count, pct in zip(bars, listings_per_group.values, percentages):
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,  # x 坐标
+        bar.get_height() + 0.5,  # y 坐标
+        f'{count:.0f}\n({pct:.1f}%)',  # 标签内容
+        ha='center', va='bottom', fontsize=10
+    )
+
+# Set the title and axis labels
+plt.title('Distribution of Listings by Listings per Host', fontsize=16)
+plt.xlabel('Listings per Host (Grouped)', fontsize=14)
+plt.ylabel('Total Listings', fontsize=14)
+
+# Rotate x-axis labels for better readability
+plt.xticks(rotation=45)
+
+# Display the plot
+plt.tight_layout()
+plt.show()
+```
+
+In London, only 47.8% (45,932 listings) are owned by single-listing hosts, while the remaining 52.2% are held by multi-listing hosts.  
+Notably, hosts with 10 or more listings account for 20.8% (20,038 listings) of the total.
+
+**conclusion:**
+
+1. Prevalence of multi-listing hosts: more than half of all listings owned by multi-listing hosts, indicating that multi-listing is common in london.
+2. Professional landlords: hosts who owned 10+ listings owned more than one fifth listings, suggesting a significant presence of professional landlords in the market.
+
+#### 6.1.2 Changes in the number of landlords and renters over the years
+
+```{python}
+# --- Count the number of new host IDs added each year ---
+new_hosts_per_year = gdf.drop_duplicates('host_id').groupby('year').size()
+
+# --- Count the cumulative number of host IDs each year ---
+year_range = range(int(gdf['year'].min()), int(gdf['year'].max()) + 1)
+id_per_year = [gdf[gdf['year'] <= year].shape[0] for year in year_range]
+
+# Create a DataFrame to display results
+result_df = pd.DataFrame({
+    'Year': year_range,
+    'New Hosts': new_hosts_per_year.reindex(year_range, fill_value=0),
+    'Total Listings Count': id_per_year
+})
+
+# Plotting the data
+fig, ax1 = plt.subplots(figsize=(20, 12))  # Greatly increased figure size
+
+# --- Plot the number of new hosts added each year (bar chart) ---
+bars = ax1.bar(result_df['Year'], result_df['New Hosts'], color='#6baed6', label='New Hosts per Year', alpha=0.8)
+ax1.set_xlabel('Year', fontsize=24, fontweight='bold')  # Significantly larger font size
+ax1.set_ylabel('New Hosts', color='#6baed6', fontsize=24, fontweight='bold')
+ax1.tick_params(axis='y', labelcolor='#6baed6', labelsize=22)
+ax1.tick_params(axis='x', labelsize=22)
+
+# Annotate bar heights with values
+for bar in bars:
+    height = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width() / 2, height, f'{int(height)}', 
+             ha='center', va='bottom', fontsize=18, color='#6baed6')  # Slightly smaller font for annotations
+
+# --- Add a second y-axis for cumulative listings (line chart) ---
+ax2 = ax1.twinx()
+lines = ax2.plot(result_df['Year'], result_df['Total Listings Count'], color='#fd8d3c', marker='o', markersize=10, label='Total Listings Count')
+ax2.set_ylabel('Listings Count', color='#e6550d', fontsize=24, fontweight='bold')
+ax2.tick_params(axis='y', labelcolor='#e6550d', labelsize=22)
+
+# Annotate line chart points with values
+for x, y in zip(result_df['Year'], result_df['Total Listings Count']):
+    ax2.text(x, y + 500, f'{int(y)}', ha='center', va='bottom', fontsize=18, color='#e6550d')  # Slightly smaller font for annotations
+
+# --- Set x-axis ticks to display years as integers ---
+plt.xticks(ticks=result_df['Year'], labels=result_df['Year'], rotation=45, fontsize=22)
+
+# --- Add a legend ---
+fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.95), fontsize=20)
+
+# --- Set the title of the plot ---
+plt.title('Yearly New Hosts and Listings on Airbnb in London', fontsize=30, fontweight='bold')
+
+# --- Display the plot ---
+plt.tight_layout()
+plt.show()
+```
+
+* Based on Airbnb's dataset for London, the whole story started in 2008 and the growth in hosts and listings was slow between 2008 and 2010, **accelerating sharply from 2011 to 2016**. The peak occurred in 2015, with 8,939 new hosts, while 2014 and 2016 saw increases of over 7,000 hosts each. By 2016, total listings neared 50,000. 
+
+* However, **growth slowed in subsequent years**, with 2020 and 2021 adding only around 1,600 hosts and 3,000 listings annually—nearly half the growth seen in 2019—largely due to the pandemic’s impact on the rental market. From 2022 to 2024, post-pandemic recovery is evident, but growth remains far below peak levels.
+
+### 6.2 Analysis of property
+#### 6.2.1 Distribution of room types of property
+
+```{python}
+#| output: false
+
+# Count the number of each property type
+property_counts = gdf['property_type'].value_counts()
+
+# Filter out the categories with frequency greater than 200
+filtered_property_counts = property_counts[property_counts > 200]
+
+# Calculate the percentage for each category
+total_count = property_counts.sum()  # 总的数量
+filtered_percentage = (filtered_property_counts / total_count) * 100
+
+# Draw a bar chart
+plt.figure(figsize=(10, 6))
+bars = filtered_property_counts.plot(kind='bar', color='skyblue')
+
+# Add title and tag
+plt.title('Distribution of Property Types (Count > 200)')
+plt.xlabel('Property Type')
+plt.ylabel('Count')
+
+for bar, count, percentage in zip(bars.patches, filtered_property_counts, filtered_percentage):
+    height = bar.get_height()
+    # Show count at the top and percentage at the bottom
+    plt.text(bar.get_x() + bar.get_width() / 2, height + 10, f'{count}', 
+             ha='center', va='bottom', fontsize=9)
+    plt.text(bar.get_x() + bar.get_width() / 2, height - 10, f'({percentage:.1f}%)', 
+             ha='center', va='top', fontsize=9)
+
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| output: false
+
+room_type_counts = gdf['room_type'].value_counts()
+room_type_percentage = gdf['room_type'].value_counts(normalize=True) * 100
+
+room_type_stats = pd.DataFrame({
+    'Count': room_type_counts,
+    'Percentage': room_type_percentage
+})
+
+room_type_stats
+```
+
+***Room type of property*** is divided into four categories.
+
+- Entire home/apt: 63.8%
+- Private room: 35.6%
+- Shared room: 0.45%
+- Hotel room: 0.2%
+
+1. Privacy and space are top priorities for most Airbnb hosts and guests. The high proportion of entire homes/apt indicates that many guests prefer independent accommodations for greater privacy and autonomy.  
+    This aligns with a broader shift in tourism, where more visitors are opting for alternative lodging options instead of traditional hotels to enjoy a more spacious and private environment [@zervas2017rise].
+2. The 35.6% share of private rooms suggests that some guests are still willing to choose more affordable accommodations, even if it means sharing common spaces. These listings cater to budget-conscious travelers.
+3. The low percentages of shared rooms and hotel rooms indicate that Airbnb's core market in London, a well-established market, tends to favor more private lodging options.
+
+#### 6.2.2 Distribution of Minimum Nights for Rental
+
+```{python}
+#| output: false
+
+# Create a subplot
+fig, ax = plt.subplots(figsize=(8, 4))  # Single subplot
+
+# Set values greater than 35 to 35
+gdf['minimum_nights_clipped'] = np.where(gdf['minimum_nights'] > 35, 35, gdf['minimum_nights'])
+bins = list(range(1, 37))  # Bins from 1 to 35, with 35+ combined into one bin
+
+# Plot the histogram for 'minimum_nights' column
+ax.hist(gdf['minimum_nights_clipped'], bins=bins, color='lightblue', edgecolor='black')
+
+# Add a vertical line for the threshold (at 30 days)
+ax.axvline(x=30, color='black', linestyle='--', linewidth=1.5, label='STR Threshold (30 days)')
+
+# Calculate the proportion below the 30-day threshold
+threshold = 30
+below_threshold = gdf[gdf['minimum_nights'] < threshold].shape[0]  # Count of listings below 30 days
+total_entries = gdf.shape[0]  # Total count of listings
+percentage_below = (below_threshold / total_entries) * 100
+
+# Display the percentage information on the graph
+ax.text(18, ax.get_ylim()[1] * 0.8,  # Set position
+        f'{below_threshold} listings ({percentage_below:.1f}%) below 30 nights',
+        fontsize=12, color='black', ha='center', bbox=dict(facecolor='white', alpha=0.6))
+
+# Set the title and labels
+ax.set_title('Distribution of Minimum Nights', fontsize=15)
+ax.set_xlabel('Minimum Nights')
+ax.set_ylabel('Count')
+ax.legend()
+
+# Set x-axis ticks and labels
+x_ticks = list(range(1, 8)) + list(range(10, 36, 5))  # Show daily ticks for the first 7 days, and every 5 days from 10 to 35
+x_labels = [str(i) for i in x_ticks[:-1]] + ['35+']  # Define tick labels
+ax.set_xticks(x_ticks)
+ax.set_xticklabels(x_labels)
+
+# Display the plot
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| output: false
+
+#Percentage of listings for which minimum nights are less than 7.
+gdf[gdf['minimum_nights']<=7].shape[0] / total_entries # 0.9232768749285172
+```
+
+Based on the dataset, 93550 listings have a minimum night stay of less than the STR threshold (30 days), making up 97.3% of the total. Additionally, listings with a minimum stay of less than 7 days account for 92.3% of the total. 
+**The London rental market on airbnb is dominated by short-term rentals.**
+
+Chaudhary had illustrated some drawbacks of short term renting [@chaudhary2021effects].
+
+1. **Reduced long-term housing supply**: Due to higher profits from short-term rentals (e.g., Airbnb), many landlords prioritize short-term leases over long-term rentals, exacerbating London's housing crisis and driving up rents, especially for low- and middle-income residents.
+2. **Community impacts**: A high volume of short-term rentals can disrupt neighborhoods, increasing noise and tourist traffic, making communities less appealing for long-term residents and undermining stability and safety.
+
+
+## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London? 
+
+::: {.duedate}
+
+( 45 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+
+## Sustainable Authorship Tools
+
+Using the Terminal in Docker, you compile the Quarto report using `quarto render <group_submission_file>.qmd`.
+
+Your QMD file should automatically download your BibTeX and CLS files and any other required files. If this is done right after library loading then the entire report should output successfully.
+
+Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) (<span style="font-family:Sans-Serif;">sansfont</span>) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`). 
+
+## References
+
+
+# Regression Part
+
+```{python}
+#| echo: false
+
+'''
+explanation: '| echo: false' means not showing source code, and 
+            '| output: false' means not showing output of that code chunk (print, plt.show(), etc.)
+And these should be placed in the first row of each code chunk.
+'''
+
+# import library used in this qmd file
+import os
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+from requests import get
+import requests
+from urllib.parse import urlparse
+from functools import wraps
+import zipfile
+import shutil
+```
+
+## Data Processing 
+
+### Airbnb data
+
+```{python}
+# read the latest airbnb listings dataset
+Airbnb_inital_Data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
+
+```{python}
+#| output: false
+
+Airbnb_inital_Data
+```
+
+```{python}
+#| output: false
+
+#expand count limitation of column display
+pd.options.display.max_columns = 75 
+
+Airbnb_inital_Data
+```
+
+```{python}
+Airbnb_inital_Data.info()
+```
+
+```{python}
+from shapely.geometry import Point
+
+# 创建民宿点的GeoDataFrame
+Airbnb_inital_Data['geometry'] = Airbnb_inital_Data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+#Airbnb_gdf['geometry'] = Airbnb_gdf['geometry'].apply(lambda x: Point(round(x.x, 5), round(x.y, 5)))
+```
+
+筛选我们需要的列
+
+```{python}
+Airbnb_Data = Airbnb_inital_Data[["name","host_id","latitude","longitude","geometry","price","reviews_per_month","availability_365","review_scores_rating","review_scores_value"]]
+```
+
+```{python}
+Airbnb_Data
+```
+
+```{python}
+#Airbnb_gdf = Airbnb_gdf.to_crs("EPSG:4326")
+```
+
+### 导入LONDON WARD 的数据
+
+```{python}
+London_ward = gpd.read_file('data/London/London_Ward_CityMerged.shp')
+```
+
+```{python}
+London_ward = London_ward.to_crs("EPSG:4326")
+```
+
+```{python}
+London_ward
+```
+
+```{python}
+Airbnb_gdf = gpd.GeoDataFrame(Airbnb_Data, geometry='geometry', crs=London_ward.crs)  # 设置相同的坐标系
+```
+
+```{python}
+print(Airbnb_gdf.crs)
+print(London_ward.crs)
+```
+
+清理NA数据
+
+```{python}
+Airbnb_gdf = Airbnb_gdf.dropna(subset=['geometry'])
+London_ward = London_ward.dropna(subset=['geometry'])
+```
+
+```{python}
+Airbnb_data_wards = gpd.sjoin(Airbnb_gdf, London_ward, how='left', predicate='within')
+```
+
+```{python}
+Airbnb_data_wards
+```
+
+```{python}
+Airbnb_data_wards = Airbnb_data_wards.drop(columns=["LB_GSS_CD","BOROUGH","POLY_ID","HECTARES","index_right","name"])
+```
+
+```{python}
+Airbnb_data_wards['WARD'] = Airbnb_data_wards['NAME']
+```
+
+```{python}
+Airbnb_data_wards = Airbnb_data_wards.drop(columns=["NONLD_AREA","NAME"])
+```
+
+```{python}
+Airbnb_data_wards_sorted = Airbnb_data_wards.sort_values(by='WARD')#, key=lambda col: col.str[0].str.upper())
+```
+
+```{python}
+Airbnb_data_wards_sorted
+```
+
+```{python}
+num_rows_with_nan = Airbnb_data_wards_sorted.isnull().any(axis=1).sum()
+
+print(f"包含 NaN 的行的数量: {num_rows_with_nan}")
+```
+
+```{python}
+Airbnb_data_wards_sorted = Airbnb_data_wards_sorted.dropna()
+```
+
+```{python}
+Airbnb_data_wards_sorted
+```
+
+```{python}
+Airbnb_final_data = Airbnb_data_wards_sorted [["WARD","GSS_CODE","price","reviews_per_month","availability_365","review_scores_rating","review_scores_value","geometry"]]
+```
+
+```{python}
+Airbnb_final_data
+```
+
+```{python}
+# Clean 'price' column and convert it to float
+Airbnb_final_data['price'] = Airbnb_final_data['price'].astype(str)
+Airbnb_final_data['price'] = Airbnb_final_data['price'].str.replace('$','', regex=False).str.replace(',','', regex=False).astype(float).fillna(-1)
+```
+
+```{python}
+Airbnb_data_wards_all = Airbnb_final_data.groupby('GSS_CODE').agg(
+    
+        WARD=('WARD', 'first'),  # 保留相同 GSS_CODE 中第一个 ward 的值
+        price=('price', 'median'),  # 对 price 列求中位数
+        availability_365=('availability_365', 'median'),  # 对 availability_365 列求平均
+        review_scores_rating=('review_scores_rating', 'median'),  # 
+        reviews_per_month=('reviews_per_month', 'median'), # 对 reviews_per_month 列求和
+        review_scores_value=('review_scores_value', 'median'),
+        count=("GSS_CODE", "size")
+        
+).reset_index()
+```
+
+```{python}
+Airbnb_data_wards_all
+```
+
+
+
+## 人口数据
+
+```{python}
+# Read file
+Population_density = pd.read_csv('data/housing-density-ward.csv')
+```
+
+```{python}
+Population_density
+```
+
+```{python}
+Population_density = Population_density.sort_values(by = 'Code')
+Population_density['Year'] = Population_density['Year'].astype(str)
+PD_filter = Population_density[Population_density['Year'].str.contains('2024', na=False)]
+```
+
+```{python}
+PD_filter = PD_filter.drop(columns=["Borough","Hectares","Square_Kilometres"])
+```
+
+```{python}
+PD_filter.rename(columns={"Code": "GSS_CODE"}, inplace=True)
+```
+
+### 连接两个数据
+
+```{python}
+Airbnb_with_population = pd.merge(Airbnb_data_wards_all, PD_filter, on="GSS_CODE", how="left")
+```
+
+```{python}
+Airbnb_with_population = Airbnb_with_population.drop(columns="Ward_Name")
+```
+
+```{python}
+Airbnb_with_population = Airbnb_with_population.dropna()
+```
+
+```{python}
+Airbnb_with_population
+```
+
+```{python}
+Airbnb_with_population.to_csv('reg_test/A_with_P.csv')
+```
+
+## 构建多元线性回归模型来研究关系
+
+```{python}
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# 选择自变量和因变量
+X = Airbnb_with_population[['price', 'availability_365', 'review_scores_rating', 'reviews_per_month', 'review_scores_value', 'count']]
+y = Airbnb_with_population['Population_per_square_kilometre']
+
+# 检查是否有缺失值
+print("Missing values in data:")
+print(Airbnb_with_population.isnull().sum())
+
+# 分割数据集为训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 创建并训练线性回归模型
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# 预测并评估模型
+y_pred = model.predict(X_test)
+
+# 输出模型系数、截距及评估指标
+print("Model Coefficients:", model.coef_)
+print("Model Intercept:", model.intercept_)
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R-squared Score:", r2_score(y_test, y_pred))
+```
+
+```{python}
+import pandas as pd
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# 计算 VIF 的函数
+def calculate_vif(X):
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = X.columns
+    vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+    return vif_data
+
+# 检查并剔除多重共线性的变量
+def remove_high_vif(X, threshold=10):
+    while True:
+        vif_data = calculate_vif(X)
+        max_vif = vif_data['VIF'].max()
+        if max_vif > threshold:
+            # 找到 VIF 最大的变量并删除
+            max_vif_feature = vif_data.loc[vif_data['VIF'].idxmax(), 'feature']
+            print(f"Removing {max_vif_feature} with VIF={max_vif:.2f}")
+            X = X.drop(columns=[max_vif_feature])
+        else:
+            break
+    return X
+
+# 原始特征集
+X_cleaned = remove_high_vif(X)
+
+# 检查清理后的特征的 VIF 值
+final_vif = calculate_vif(X_cleaned)
+
+# 输出最终特征集及其 VIF 值
+print("Final features after removing multicollinearity:")
+print(final_vif)
+
+# 重新训练线性回归模型
+X_train, X_test, y_train, y_test = train_test_split(X_cleaned, y, test_size=0.2, random_state=42)
+model2 = LinearRegression()
+model2.fit(X_train, y_train)
+y_pred = model2.predict(X_test)
+
+# 输出更新后的模型评估指标
+print("Updated Model Coefficients:", model2.coef_)
+print("Updated Model Intercept:", model2.intercept_)
+print("Updated Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("Updated R-squared Score:", r2_score(y_test, y_pred))
+```
+
+
+
+
+
+
+

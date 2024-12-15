@@ -978,7 +978,7 @@ lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].to_csv('data/LSOA_air
 print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].head())
 ```
 
-### merge all data
+### Merge all data
 
 ```{python}
 # 查看每个数据集的列名
@@ -1135,23 +1135,17 @@ print(final_data[['lsoa11cd', 'Cluster']].head())
 
 ```{python}
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 
-# 假设 X_scaled 已经是标准化后的数据
-# 如果数据尚未标准化，请确保之前执行过 StandardScaler
+# Run KMeans clustering with K=3
+kmeans = KMeans(n_clusters=3, random_state=42)  # Set K=3 for clustering
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)  # Add cluster labels to the DataFrame
 
-# KMeans 聚类分析
-kmeans = KMeans(n_clusters=3, random_state=42)  # 设置 K=3 进行聚类
-final_data['Cluster'] = kmeans.fit_predict(X_scaled)  # 添加聚类标签
-
-# 查看聚类结果（前5行）
+# Display clustering results (first few rows)
 print("Clustering results:")
 print(final_data[['lsoa11cd', 'Cluster']].head())
 
-# 计算每个聚类的特征均值，分析各个聚类的特征
+# Analyze the mean characteristics of each cluster (numerical features only)
 numerical_columns = ['average_price', 'airbnb_density', 'price_change', 
                      'people per sq km', 'income score (rate)', 
                      'hotel_density', 'tourist_attraction_density', 'avptai2015']
@@ -1159,31 +1153,64 @@ cluster_summary = final_data.groupby('Cluster')[numerical_columns].mean()
 print("\nCluster summary (mean values of features):")
 print(cluster_summary)
 
-# 查看每个聚类中的社区数量
+# Count the number of neighborhoods in each cluster
 cluster_counts = final_data['Cluster'].value_counts()
 print("\nNumber of neighborhoods in each cluster:")
 print(cluster_counts)
 
-# 使用 PCA 将数据降维至2维，以便可视化
-pca = PCA(n_components=2)
-pca_result = pca.fit_transform(X_scaled)  # 使用标准化数据进行 PCA
-
-# 将 PCA 结果添加到 DataFrame 中
-final_data['PCA1'] = pca_result[:, 0]
-final_data['PCA2'] = pca_result[:, 1]
-
-# 可视化 PCA 空间中的聚类结果
-plt.figure(figsize=(8, 6))
-sns.scatterplot(data=final_data, x='PCA1', y='PCA2', hue='Cluster', palette='viridis', s=50)
-plt.title('K-Means Clustering Results (K=3) in PCA Space')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
-plt.legend(title='Cluster')
-plt.show()
-
-# 保存结果到 CSV 文件
-final_data.to_csv('london_airbnb_clustering_results.csv', index=False)
+# Save the clustering results to a CSV file
+final_data.to_csv('data/london_airbnb_clustering_results.csv', index=False)
 print("\nClustering results have been saved to 'london_airbnb_clustering_results.csv'.")
+```
+
+### Plot K-Means Clustering Result
+
+```{python}
+import matplotlib.pyplot as plt
+from shapely.geometry import Point
+
+# Load LSOA shapefile
+shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_gdf = gpd.read_file(shapefile_path)
+
+# Load clustering results
+clustering_results = pd.read_csv('data/london_airbnb_clustering_results.csv')
+clustering_results.rename(columns={'lsoa11cd': 'LSOA11CD'}, inplace=True)
+lsoa_gdf = lsoa_gdf.merge(clustering_results[['LSOA11CD', 'Cluster']], on='LSOA11CD', how='left')
+
+# Load Airbnb data with latitude and longitude
+airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
+airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
+
+# Ensure the CRS of all data matches
+lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
+airbnb_gdf = airbnb_gdf.to_crs("EPSG:4326")
+
+# Create a map plot
+fig, ax = plt.subplots(figsize=(12, 12))  # Adjust figure size
+
+# Define softer cluster colors
+cluster_colors = {0: '#FFB6C1', 1: '#ADD8E6', 2: '#90EE90'}  # Light pink, light blue, light green
+
+# Plot LSOA regions colored by cluster
+for cluster, color in cluster_colors.items():
+    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(ax=ax, color=color, edgecolor='grey', linewidth=0.3, label=f'Cluster {cluster}')
+
+# Plot Airbnb point data with transparency and smaller size
+airbnb_gdf.plot(ax=ax, markersize=1, color='purple', alpha=0.3, label='Airbnb Listings')
+
+# Adjust the extent (zoom to the full London area)
+ax.set_xlim(lsoa_gdf.total_bounds[0] - 0.01, lsoa_gdf.total_bounds[2] + 0.01)
+ax.set_ylim(lsoa_gdf.total_bounds[1] - 0.01, lsoa_gdf.total_bounds[3] + 0.01)
+
+# Clean up the layout
+ax.set_title("K-Means Clustering Results with Airbnb Listings", fontsize=14)
+ax.axis("off")
+plt.legend(loc='upper left', fontsize=10)
+
+# Show the map
+plt.show()
 ```
 
 

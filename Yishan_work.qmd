@@ -1167,8 +1167,6 @@ print("\nClustering results have been saved to 'london_airbnb_clustering_results
 
 ```{python}
 import matplotlib.pyplot as plt
-from shapely.geometry import Point
-
 # Load LSOA shapefile
 shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
 lsoa_gdf = gpd.read_file(shapefile_path)
@@ -1178,38 +1176,32 @@ clustering_results = pd.read_csv('data/london_airbnb_clustering_results.csv')
 clustering_results.rename(columns={'lsoa11cd': 'LSOA11CD'}, inplace=True)
 lsoa_gdf = lsoa_gdf.merge(clustering_results[['LSOA11CD', 'Cluster']], on='LSOA11CD', how='left')
 
-# Load Airbnb data with latitude and longitude
-airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
-airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
-airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
-
-# Ensure the CRS of all data matches
+# Ensure the CRS matches
 lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
-airbnb_gdf = airbnb_gdf.to_crs("EPSG:4326")
 
 # Create a map plot
-fig, ax = plt.subplots(figsize=(12, 12))  # Adjust figure size
+fig, ax = plt.subplots(figsize=(12, 12))
 
-# Define softer cluster colors
-cluster_colors = {0: '#FFB6C1', 1: '#ADD8E6', 2: '#90EE90'}  # Light pink, light blue, light green
+# Define soft pastel cluster colors (replacing purple with blue)
+cluster_colors = {
+    0: '#A7C7E7',  # Soft Blue
+    1: '#F4A300',  # Soft Peach
+    2: '#F1C6C2'   # Soft Rose
+}
 
 # Plot LSOA regions colored by cluster
 for cluster, color in cluster_colors.items():
-    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(ax=ax, color=color, edgecolor='grey', linewidth=0.3, label=f'Cluster {cluster}')
+    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(
+        ax=ax, color=color, edgecolor='gray', linewidth=0.3, label=f'Cluster {cluster}'
+    )
 
-# Plot Airbnb point data with transparency and smaller size
-airbnb_gdf.plot(ax=ax, markersize=1, color='purple', alpha=0.3, label='Airbnb Listings')
-
-# Adjust the extent (zoom to the full London area)
-ax.set_xlim(lsoa_gdf.total_bounds[0] - 0.01, lsoa_gdf.total_bounds[2] + 0.01)
-ax.set_ylim(lsoa_gdf.total_bounds[1] - 0.01, lsoa_gdf.total_bounds[3] + 0.01)
-
-# Clean up the layout
-ax.set_title("K-Means Clustering Results with Airbnb Listings", fontsize=14)
+# Layout and legend styling
+ax.set_title("K-Means Clustering Results By LSOA", fontsize=16, color="#333333", fontweight='bold')
 ax.axis("off")
-plt.legend(loc='upper left', fontsize=10)
+plt.legend(loc='lower left', fontsize=12, frameon=True, title="Clusters", title_fontsize=14)
 
 # Show the map
+plt.tight_layout()
 plt.show()
 ```
 

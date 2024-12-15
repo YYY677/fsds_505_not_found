@@ -724,10 +724,10 @@ import geopandas as gpd
 import osmnx as ox
 import pandas as pd
 
-# Step 1: Load London LSOA boundary data
+#  Load London LSOA boundary data
 lsoa_boundaries = gpd.read_file("data/London/LSOA_2011_London_gen_MHW.shp")
 
-# Step 2: Retrieve tourist attraction data for London
+# Retrieve tourist attraction data for London
 # Use OSMnx to extract nodes tagged as `tourism=attraction`
 tourist_attractions = ox.features_from_place(
     "London, England", tags={"tourism": "attraction"}
@@ -736,12 +736,12 @@ tourist_attractions = ox.features_from_place(
 # Ensure the coordinate reference system (CRS) is consistent
 tourist_attractions = tourist_attractions.to_crs(lsoa_boundaries.crs)
 
-# Step 3: Count the number of tourist attractions within each LSOA
+# : Count the number of tourist attractions within each LSOA
 lsoa_boundaries["tourist_attraction_count"] = lsoa_boundaries.apply(
     lambda row: tourist_attractions.within(row.geometry).sum(), axis=1
 )
 
-# Step 4: Calculate the density of tourist attractions (per square kilometer)
+#  Calculate the density of tourist attractions (per square kilometer)
 # Transform to an equal-area projection to compute accurate area
 lsoa_boundaries = lsoa_boundaries.to_crs({"proj": "cea"})
 lsoa_boundaries["area_km2"] = lsoa_boundaries.geometry.area / 1e6  # Convert to square kilometers
@@ -751,7 +751,7 @@ lsoa_boundaries["tourist_attraction_density"] = (
     lsoa_boundaries["tourist_attraction_count"] / lsoa_boundaries["area_km2"]
 )
 
-# Step 5: Export results to a CSV file
+#  Export results to a CSV file
 # Use 'LSOA11CD' as the LSOA code column
 output_path = "data/london_lsoa_tourist_density.csv"
 output_csv = lsoa_boundaries[["LSOA11CD", "tourist_attraction_count", "tourist_attraction_density"]]
@@ -837,16 +837,16 @@ print(f"Filtered London data has been saved to {output_csv_path}")
 ```{python}
 import pandas as pd
 
-# Step 1: Load the data
+# Load the data
 data = pd.read_csv('data/London_Housing_Data.csv')
 
-# Step 2: Check the column names to ensure they are correct
+#  Check the column names to ensure they are correct
 print(data.columns)  # This will print all column names
 
 # Strip any leading/trailing spaces in the column names
 data.columns = data.columns.str.strip()
 
-# Step 3: Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
+#  Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
 data['Year ending Mar 2023'] = pd.to_numeric(data['Year ending Mar 2023'], errors='coerce')
 data['Year ending Dec 2018'] = pd.to_numeric(data['Year ending Dec 2018'], errors='coerce')
 
@@ -857,16 +857,16 @@ print(f"Missing values in Year columns:\n{missing_values}")
 # Optionally, drop rows with missing values for price calculations (only for the year columns)
 data_clean = data.dropna(subset=['Year ending Mar 2023', 'Year ending Dec 2018'])
 
-# Step 4: Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
+#  Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
 data_clean['Price_Change'] = (data_clean['Year ending Mar 2023'] - data_clean['Year ending Dec 2018']) / data_clean['Year ending Dec 2018'] * 100
 
-# Step 5: Merge the price change back with the original data (using LSOA_code as the key)
+#  Merge the price change back with the original data (using LSOA_code as the key)
 data_with_change = pd.merge(data, data_clean[['LSOA code', 'Price_Change']], on='LSOA code', how='left')
 
-# Step 6: Ensure data is sorted by LSOA code
+#  Ensure data is sorted by LSOA code
 data_with_change_sorted = data_with_change.sort_values(by=['LSOA code'])
 
-# Step 7: Save the result to a new CSV file
+#Save the result to a new CSV file
 data_with_change_sorted[['LSOA code', 'Price_Change']].to_csv('data/LSOA_London_houseprice_change.csv', index=False)
 
 print("House price change data saved to 'LSOA_London_houseprice_change.csv'")
@@ -904,17 +904,17 @@ airbnb_data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory
 
 ```{python}
 from shapely.geometry import Point
-# Step 2: Filter out only the columns we need
+# Filter out only the columns we need
 columns_to_keep = ['id', 'property_type', 'room_type', 'price', 'review_scores_rating', 'review_scores_value', 'longitude', 'latitude']
 airbnb_filtered = airbnb_data[columns_to_keep]
 
-# Step 3: Convert longitude and latitude to geometry (Point)
+#  Convert longitude and latitude to geometry (Point)
 airbnb_filtered['geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
-# Step 4: Create a GeoDataFrame
+# Create a GeoDataFrame
 airbnb_gdf = gpd.GeoDataFrame(airbnb_filtered, geometry='geometry', crs="EPSG:4326")  # Ensure CRS is WGS84
 
-# Step 5: Optionally, save the filtered data to a new CSV file (or to a shapefile if you want to preserve the geometry)
+#  Optionally, save the filtered data to a new CSV file (or to a shapefile if you want to preserve the geometry)
 airbnb_gdf.to_csv('data/filtered_airbnb_data_with_geometry.csv', index=False)
 
 # Print the cleaned data
@@ -924,34 +924,34 @@ print(airbnb_gdf.head())
 ### Calculating Airbnb Density and Average Price per Night for LSOA Units
 
 ```{python}
-# Step 1: Load the LSOA boundary data
+#  Load the LSOA boundary data
 lsoa_shp_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
 lsoa_data = gpd.read_file(lsoa_shp_path)
 
-# Step 2: Load the Airbnb data with latitude and longitude
+#  Load the Airbnb data with latitude and longitude
 airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
 
-# Step 3: Ensure the Airbnb data has 'longitude' and 'latitude' columns and create geometry
+#  Ensure the Airbnb data has 'longitude' and 'latitude' columns and create geometry
 airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
-# Step 4: Convert the DataFrame to GeoDataFrame
+#  Convert the DataFrame to GeoDataFrame
 airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry')
 
-# Step 5: Ensure the CRS of both dataframes match (EPSG:4326 for both)
+# Ensure the CRS of both dataframes match (EPSG:4326 for both)
 lsoa_data = lsoa_data.to_crs("EPSG:4326")
 airbnb_gdf = airbnb_gdf.set_crs("EPSG:4326", allow_override=True)
 
-# Step 6: Spatial join to get Airbnb points within each LSOA
+#  Spatial join to get Airbnb points within each LSOA
 airbnb_in_lsoa = gpd.sjoin(airbnb_gdf, lsoa_data, how="inner", predicate="within")
 
-# Step 7: Clean the price column (remove '$' and convert to numeric)
+#  Clean the price column (remove '$' and convert to numeric)
 airbnb_in_lsoa['price'] = airbnb_in_lsoa['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
 
-# Step 8: Calculate average price for each LSOA
+# Calculate average price for each LSOA
 average_price = airbnb_in_lsoa.groupby('LSOA11CD')['price'].mean().reset_index()
 average_price.rename(columns={'price': 'average_price'}, inplace=True)
 
-# Step 9: Calculate Airbnb density (number of Airbnb listings per LSOA area)
+#  Calculate Airbnb density (number of Airbnb listings per LSOA area)
 # First, calculate the area for each LSOA (in square meters)
 lsoa_data['area'] = lsoa_data.geometry.area  # in square meters
 
@@ -961,24 +961,24 @@ airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD').size().reset_index(name='air
 # Merge Airbnb density count with LSOA data
 lsoa_data = lsoa_data.merge(airbnb_density, on='LSOA11CD', how='left')
 
-# Step 10: Calculate Airbnb density per square kilometer
+#  Calculate Airbnb density per square kilometer
 # Convert area from square meters to square kilometers
 lsoa_data['area_km2'] = lsoa_data['area'] / 1e6
 
 # Calculate Airbnb density (listings per square kilometer)
 lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
 
-# Step 11: Merge the average price data back with LSOA data
+#  Merge the average price data back with LSOA data
 lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
 
-# Step 12: Optionally, save the results to a new CSV or Shapefile
+#  Optionally, save the results to a new CSV or Shapefile
 lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].to_csv('data/LSOA_airbnb_summary.csv', index=False)
 
-# Step 13: Print the first few rows to check the result
+#  Print the first few rows to check the result
 print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].head())
 ```
 
-### merge all data
+### Merge all data
 
 ```{python}
 # 查看每个数据集的列名
@@ -1001,7 +1001,7 @@ hotel_density_df = pd.read_csv('data/lsoa_hotel_density.csv')
 tourist_density_df = pd.read_csv('data/london_lsoa_tourist_density.csv')
 avptai_df = pd.read_csv('data/LSOA_AvPTAI.csv')
 
-# Step 1: Merge the datasets based on the correct columns
+#  Merge the datasets based on the correct columns
 merged_data = airbnb_df.merge(houseprice_df, left_on='LSOA11CD', right_on='LSOA code', how='left')
 merged_data = merged_data.merge(pop_density_df, left_on='LSOA11CD', right_on='LSOA Code', how='left')
 merged_data = merged_data.merge(imd_df, left_on='LSOA11CD', right_on='LSOA code (2011)', how='left')
@@ -1009,20 +1009,159 @@ merged_data = merged_data.merge(hotel_density_df, on='LSOA11CD', how='left')
 merged_data = merged_data.merge(tourist_density_df, on='LSOA11CD', how='left')
 merged_data = merged_data.merge(avptai_df, left_on='LSOA11CD', right_on='LSOA2011', how='left')
 
-# Step 2: Select only the relevant columns
+# Select only the relevant columns
 final_data = merged_data[['LSOA11CD', 'average_price', 'airbnb_density', 'Price_Change', 
                           'People per Sq Km', 'Income Score (rate)', 'hotel_density', 
                           'tourist_attraction_density', 'AvPTAI2015']]
 
-# Step 3: Check the first few rows of the final data
+# Check the first few rows of the final data
 print(final_data.head())
 
-# Step 4: Optionally, save the final merged data to a CSV file
+# Optionally, save the final merged data to a CSV file
 final_data.to_csv('data/final_LSOA_data.csv', index=False)
 ```
 
+### Checking and cleaning the data before 
 
+```{python}
+# Step 1: Check the column names for consistency
+print(final_data.columns)
 
+# Step 2: Strip any leading/trailing spaces from column names
+final_data.columns = final_data.columns.str.strip()
+
+# Step 3: Check for missing values
+print(final_data.isnull().sum())
+
+# Step 4: Fill missing values for numerical columns using the median, using `.loc` to avoid SettingWithCopyWarning
+numerical_columns = ['average_price', 'airbnb_density', 'Price_Change', 'People per Sq Km', 
+                     'Income Score (rate)', 'hotel_density', 'tourist_attraction_density', 'AvPTAI2015']
+
+for col in numerical_columns:
+    if col in final_data.columns:
+        final_data.loc[:, col] = final_data[col].fillna(final_data[col].median())
+
+# Step 5: Check if any missing values remain
+print(final_data.isnull().sum())
+```
+
+###  Standardization (Z-score scaling) 
+
+```{python}
+from sklearn.preprocessing import StandardScaler
+
+# Create a list of numerical columns for standardization
+numerical_columns = ['average_price', 'airbnb_density', 'price_change', 
+                     'people per sq km', 'income score (rate)', 
+                     'hotel_density', 'tourist_attraction_density', 'avptai2015']
+
+#  Initialize StandardScaler
+scaler = StandardScaler()
+
+#  Apply Z-score standardization to the numerical columns
+final_data[numerical_columns] = scaler.fit_transform(final_data[numerical_columns])
+
+#  Check the result
+print(final_data.head())
+```
+
+#### Elbow Method and Silhouette Coefficient
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+# Assuming final_data is your merged dataset
+#  Select relevant columns (excluding 'lsoa11cd' for clustering)
+clustering_data = final_data.drop(columns=['lsoa11cd'])
+
+#  Standardize the data (Z-score scaling)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(clustering_data)
+
+#  Elbow Method for K value selection
+inertia = []
+K_range = range(1, 11)  # Check for K between 1 and 10 (you can adjust the range)
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Plot the inertia to visualize the "elbow"
+plt.figure(figsize=(8, 6))
+plt.plot(K_range, inertia, marker='o')
+plt.title("Elbow Method for Optimal K")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Inertia")
+plt.grid(True)
+plt.show()
+
+# Silhouette Coefficient for K value selection
+silhouette_scores = []
+K_range = range(2, 11)  # Silhouette score is not defined for 1 cluster, so start from 2
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    score = silhouette_score(X_scaled, kmeans.labels_)
+    silhouette_scores.append(score)
+
+# Plot the silhouette scores
+plt.figure(figsize=(8, 6))
+plt.plot(K_range, silhouette_scores, marker='o', color='blue')
+plt.title("Silhouette Scores for Optimal K")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Silhouette Score")
+plt.grid(True)
+plt.show()
+
+# After inspecting the elbow plot and silhouette scores, choose the optimal K (e.g., 3)
+optimal_k = 3  # Replace with the value you choose
+
+# Perform KMeans clustering with the chosen number of clusters
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)
+
+# Check the resulting clusters
+print(final_data[['lsoa11cd', 'Cluster']].head())
+```
+
+### KMeans clustering
+
+```{python}
+from sklearn.cluster import KMeans
+import pandas as pd
+
+# Run KMeans clustering with K=3
+kmeans = KMeans(n_clusters=3, random_state=42)  # Set K=3 for clustering
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)  # Add cluster labels to the DataFrame
+
+# Display clustering results (first few rows)
+print("Clustering results:")
+print(final_data[['lsoa11cd', 'Cluster']].head())
+
+# Analyze the mean characteristics of each cluster (numerical features only)
+numerical_columns = ['average_price', 'airbnb_density', 'price_change', 
+                     'people per sq km', 'income score (rate)', 
+                     'hotel_density', 'tourist_attraction_density', 'avptai2015']
+cluster_summary = final_data.groupby('Cluster')[numerical_columns].mean()
+print("\nCluster summary (mean values of features):")
+print(cluster_summary)
+
+# Count the number of neighborhoods in each cluster
+cluster_counts = final_data['Cluster'].value_counts()
+print("\nNumber of neighborhoods in each cluster:")
+print(cluster_counts)
+
+# Save the clustering results to a CSV file
+final_data.to_csv('london_airbnb_clustering_results.csv', index=False)
+print("\nClustering results have been saved to 'london_airbnb_clustering_results.csv'.")
+```
 
 
 ## Sustainable Authorship Tools

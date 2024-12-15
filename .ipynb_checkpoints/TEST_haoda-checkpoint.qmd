@@ -653,19 +653,17 @@ import zipfile
 import shutil
 ```
 
+```{python}
 ## Data Processing 
+```
 
+```{python}
 ### Airbnb data
+```
 
 ```{python}
 # read the latest airbnb listings dataset
 Airbnb_inital_Data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
-```
-
-```{python}
-#| output: false
-
-Airbnb_inital_Data
 ```
 
 ```{python}
@@ -678,6 +676,7 @@ Airbnb_inital_Data
 ```
 
 ```{python}
+#| output: false
 Airbnb_inital_Data.info()
 ```
 
@@ -689,21 +688,17 @@ Airbnb_inital_Data['geometry'] = Airbnb_inital_Data.apply(lambda row: Point(row[
 #Airbnb_gdf['geometry'] = Airbnb_gdf['geometry'].apply(lambda x: Point(round(x.x, 5), round(x.y, 5)))
 ```
 
-筛选我们需要的列
+```{python}
+### 筛选我们需要的列
+```
 
 ```{python}
 Airbnb_Data = Airbnb_inital_Data[["name","host_id","latitude","longitude","geometry","price","reviews_per_month","availability_365","review_scores_rating","review_scores_value"]]
 ```
 
 ```{python}
-Airbnb_Data
-```
-
-```{python}
-#Airbnb_gdf = Airbnb_gdf.to_crs("EPSG:4326")
-```
-
 ### 导入LONDON WARD 的数据
+```
 
 ```{python}
 London_ward = gpd.read_file('data/London/London_Ward_CityMerged.shp')
@@ -714,19 +709,18 @@ London_ward = London_ward.to_crs("EPSG:4326")
 ```
 
 ```{python}
-London_ward
-```
-
-```{python}
 Airbnb_gdf = gpd.GeoDataFrame(Airbnb_Data, geometry='geometry', crs=London_ward.crs)  # 设置相同的坐标系
 ```
 
 ```{python}
+#| output: false
 print(Airbnb_gdf.crs)
 print(London_ward.crs)
 ```
 
-清理NA数据
+```{python}
+### 清理NA数据
+```
 
 ```{python}
 Airbnb_gdf = Airbnb_gdf.dropna(subset=['geometry'])
@@ -735,10 +729,6 @@ London_ward = London_ward.dropna(subset=['geometry'])
 
 ```{python}
 Airbnb_data_wards = gpd.sjoin(Airbnb_gdf, London_ward, how='left', predicate='within')
-```
-
-```{python}
-Airbnb_data_wards
 ```
 
 ```{python}
@@ -758,13 +748,10 @@ Airbnb_data_wards_sorted = Airbnb_data_wards.sort_values(by='WARD')#, key=lambda
 ```
 
 ```{python}
-Airbnb_data_wards_sorted
-```
-
-```{python}
+#| output: false
 num_rows_with_nan = Airbnb_data_wards_sorted.isnull().any(axis=1).sum()
 
-print(f"包含 NaN 的行的数量: {num_rows_with_nan}")
+print(f"Count of columns tha contain NaN: {num_rows_with_nan}")
 ```
 
 ```{python}
@@ -772,15 +759,7 @@ Airbnb_data_wards_sorted = Airbnb_data_wards_sorted.dropna()
 ```
 
 ```{python}
-Airbnb_data_wards_sorted
-```
-
-```{python}
 Airbnb_final_data = Airbnb_data_wards_sorted [["WARD","GSS_CODE","price","reviews_per_month","availability_365","review_scores_rating","review_scores_value","geometry"]]
-```
-
-```{python}
-Airbnb_final_data
 ```
 
 ```{python}
@@ -804,20 +783,15 @@ Airbnb_data_wards_all = Airbnb_final_data.groupby('GSS_CODE').agg(
 ```
 
 ```{python}
+#| output: false
 Airbnb_data_wards_all
 ```
-
-
 
 ## 人口数据
 
 ```{python}
 # Read file
 Population_density = pd.read_csv('data/housing-density-ward.csv')
-```
-
-```{python}
-Population_density
 ```
 
 ```{python}
@@ -834,7 +808,9 @@ PD_filter = PD_filter.drop(columns=["Borough","Hectares","Square_Kilometres"])
 PD_filter.rename(columns={"Code": "GSS_CODE"}, inplace=True)
 ```
 
+```{python}
 ### 连接两个数据
+```
 
 ```{python}
 Airbnb_with_population = pd.merge(Airbnb_data_wards_all, PD_filter, on="GSS_CODE", how="left")
@@ -849,16 +825,18 @@ Airbnb_with_population = Airbnb_with_population.dropna()
 ```
 
 ```{python}
-Airbnb_with_population
+#Airbnb_with_population.to_csv('data/A_with_P.csv')
 ```
 
 ```{python}
-Airbnb_with_population.to_csv('reg_test/A_with_P.csv')
-```
-
 ## 构建多元线性回归模型来研究关系
+```
+
+In order to more intuitively prove the impact of Airbnb on the local community and explore the extent of the impact, we used the method of constructing a multiple linear regression model, where we calculated the housing price, population density, and median number of annual house sales of each ward, and took them as the dependent variables. We calculated the median number of Airbnb listings in each ward, monthly number of reviews, annual availablity, review rating, and number as independent variables.
 
 ```{python}
+#| output: false
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
@@ -936,9 +914,198 @@ print("Updated Mean Squared Error:", mean_squared_error(y_test, y_pred))
 print("Updated R-squared Score:", r2_score(y_test, y_pred))
 ```
 
+Population density as the dependent variable:
+By calculating the VIF value, we removed the variables with multicollinearity, and the R-square Score of the improved model is 0.42, which indicates that the related indicators of Airbnb will affect the local population density to an extent of 42%, which is a good result.
+
+```{python}
+## 处理房价和房子销售数量的数据
+```
+
+```{python}
+House_price_initial = pd.read_csv('data/land-registry-house-prices-ward.csv')
+House_price_initial = House_price_initial.sort_values(by = 'Code')
+```
+
+```{python}
+# Select latest data
+HP_filter = House_price_initial[House_price_initial['Year'].str.contains('Year ending Dec 2017', na=False)]
+HP_filter = HP_filter[HP_filter['Measure'].str.contains('Median', na=False)]
+HP_filter = HP_filter.drop(columns=["Borough"])
+```
+
+```{python}
+### 同样的处理房子销售数量的数据
+```
+
+```{python}
+HS_filter = House_price_initial[House_price_initial['Year'].str.contains('Year ending Dec 2017', na=False)]
+HS_filter = HS_filter[HS_filter['Measure'].str.contains('Sales', na=False)]
+HS_filter = HS_filter.drop(columns=["Borough"])
+```
+
+```{python}
+HS_filter = HS_filter[~HS_filter['Ward_name'].str.contains('City of London')]
+HP_filter = HP_filter[~HP_filter['Ward_name'].str.contains('City of London')]
+```
+
+```{python}
+HS_filter.rename(columns={"Code": "GSS_CODE"}, inplace=True)
+HP_filter.rename(columns={"Code": "GSS_CODE"}, inplace=True)
+```
+
+```{python}
+### 分别连接两组数据
+```
+
+```{python}
+Airbnb_with_housedata = pd.merge(Airbnb_data_wards_all, HP_filter, on="GSS_CODE", how="left")
+```
+
+```{python}
+Airbnb_with_housedata = pd.merge(Airbnb_with_housedata, HS_filter, on="GSS_CODE", how="left")
+```
+
+```{python}
+Airbnb_with_housedata = Airbnb_with_housedata.drop(columns=["Year_x","Year_y","Ward_name_x","Ward_name_y","Measure_x","Measure_y"])
+```
+
+```{python}
+Airbnb_with_housedata.rename(columns={"Value_x": "Houseprice_median"}, inplace=True)
+Airbnb_with_housedata.rename(columns={"Value_y": "Housesales_median"}, inplace=True)
+```
+
+```{python}
+Airbnb_with_housedata=Airbnb_with_housedata.dropna()
+```
+
+```{python}
+Airbnb_with_housedata = Airbnb_with_housedata.drop(columns=["review_scores_rating"])
+```
+
+```{python}
+#Airbnb_with_housedata.to_csv('data/Airbnb_with_housedata.csv')
+```
+
+```{python}
+## 构建回归模型
+```
+
+```{python}
+#| output: false
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+
+# Ensure 'Houseprice_median' and 'Housesales_median' are numeric
+if Airbnb_with_housedata['Houseprice_median'].dtype == 'object':
+    Airbnb_with_housedata['Houseprice_median'] = Airbnb_with_housedata['Houseprice_median'].str.replace(',', '').astype(float)
+if Airbnb_with_housedata['Housesales_median'].dtype == 'object':
+    Airbnb_with_housedata['Housesales_median'] = Airbnb_with_housedata['Housesales_median'].str.replace(',', '').astype(float)
 
 
+# Define independent variables (X) and dependent variables (y1, y2)
+X = Airbnb_with_housedata[['price', 'availability_365', 'reviews_per_month', 'review_scores_value', 'count']]
+y1 = Airbnb_with_housedata['Houseprice_median']
+y2 = Airbnb_with_housedata['Housesales_median']
 
+# Split the data into training and testing sets
+X_train1, X_test1, y_train1, y_test1 = train_test_split(X, y1, test_size=0.3, random_state=42)
+X_train2, X_test2, y_train2, y_test2 = train_test_split(X, y2, test_size=0.3, random_state=42)
 
+# Fit the models
+model3 = LinearRegression().fit(X_train1, y_train1)
+model4 = LinearRegression().fit(X_train2, y_train2)
 
+# Predictions
+y_pred1 = model3.predict(X_test1)
+y_pred2 = model4.predict(X_test2)
+
+# Model evaluation
+results3 = {
+    'MSE': mean_squared_error(y_test1, y_pred1),
+    'R^2': r2_score(y_test1, y_pred1),
+    'Coefficients': model3.coef_,
+    'Intercept': model3.intercept_,
+}
+
+results4 = {
+    'MSE': mean_squared_error(y_test2, y_pred2),
+    'R^2': r2_score(y_test2, y_pred2),
+    'Coefficients': model4.coef_,
+    'Intercept': model4.intercept_,
+}
+
+results3, results4
+```
+
+```{python}
+
+# 计算 VIF 的函数
+def calculate_vif(X):
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = X.columns
+    vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+    return vif_data
+
+# 检查并剔除多重共线性的变量
+def remove_high_vif(X, threshold=10):
+    while True:
+        vif_data = calculate_vif(X)
+        max_vif = vif_data['VIF'].max()
+        if max_vif > threshold:
+            # 找到 VIF 最大的变量并删除
+            max_vif_feature = vif_data.loc[vif_data['VIF'].idxmax(), 'feature']
+            print(f"Removing {max_vif_feature} with VIF={max_vif:.2f}")
+            X = X.drop(columns=[max_vif_feature])
+        else:
+            break
+    return X
+
+# 原始特征集
+X_cleaned = remove_high_vif(X)
+
+# 检查清理后的特征的 VIF 值
+final_vif = calculate_vif(X_cleaned)
+
+# 输出最终特征集及其 VIF 值
+print("Final features after removing multicollinearity:")
+print(final_vif)
+
+```
+
+```{python}
+# Split the data into training and testing sets
+X_train1, X_test1, y_train1, y_test1 = train_test_split(X_cleaned, y1, test_size=0.3, random_state=42)
+X_train2, X_test2, y_train2, y_test2 = train_test_split(X_cleaned, y2, test_size=0.3, random_state=42)
+
+# Fit the models
+model3 = LinearRegression().fit(X_train1, y_train1)
+model4 = LinearRegression().fit(X_train2, y_train2)
+
+# Predictions
+y_pred1 = model3.predict(X_test1)
+y_pred2 = model4.predict(X_test2)
+
+# Model evaluation
+results3 = {
+    'MSE': mean_squared_error(y_test1, y_pred1),
+    'R^2': r2_score(y_test1, y_pred1),
+    'Coefficients': model3.coef_,
+    'Intercept': model3.intercept_,
+}
+
+results4 = {
+    'MSE': mean_squared_error(y_test2, y_pred2),
+    'R^2': r2_score(y_test2, y_pred2),
+    'Coefficients': model4.coef_,
+    'Intercept': model4.intercept_,
+}
+
+results3, results4
+```
+
+Prices and number of homes sold:
+In the same multi-collinearity processing, we found through model analysis that factors such as price, quantity, monthly number of reviews and review scores on Airbnb would affect the house price of ward in the UK to a degree of 63%, but for the annual house sales, there was little influence, and only 1.8% of the change was related to Airbnb.
 

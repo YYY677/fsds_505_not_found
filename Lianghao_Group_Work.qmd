@@ -691,6 +691,7 @@ plt.tight_layout()
 plt.show()
 ```
 
+
 [@dignazio:2020], [@HofmannTess2020AiNY] 测试一下
 [@McDonoughAnnie2019NYCf]
 [@SeilerMichaelJ.2024AonA]
@@ -704,7 +705,6 @@ plt.show()
 ( 45 points; Answer due {{< var assess.group-date >}} )
 
 :::
-
 
 ## Sustainable Authorship Tools
 

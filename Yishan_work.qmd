@@ -895,8 +895,131 @@ convert_excel_to_csv(input_file_imd, output_file_imd)
 convert_excel_to_csv(input_file_population, output_file_population)
 ```
 
+### Read and process Airbnb data
 
+```{python}
+# read in Airbnb data
+airbnb_data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
 
+```{python}
+from shapely.geometry import Point
+# Step 2: Filter out only the columns we need
+columns_to_keep = ['id', 'property_type', 'room_type', 'price', 'review_scores_rating', 'review_scores_value', 'longitude', 'latitude']
+airbnb_filtered = airbnb_data[columns_to_keep]
+
+# Step 3: Convert longitude and latitude to geometry (Point)
+airbnb_filtered['geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Step 4: Create a GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_filtered, geometry='geometry', crs="EPSG:4326")  # Ensure CRS is WGS84
+
+# Step 5: Optionally, save the filtered data to a new CSV file (or to a shapefile if you want to preserve the geometry)
+airbnb_gdf.to_csv('data/filtered_airbnb_data_with_geometry.csv', index=False)
+
+# Print the cleaned data
+print(airbnb_gdf.head())
+```
+
+### Calculating Airbnb Density and Average Price per Night for LSOA Units
+
+```{python}
+# Step 1: Load the LSOA boundary data
+lsoa_shp_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_data = gpd.read_file(lsoa_shp_path)
+
+# Step 2: Load the Airbnb data with latitude and longitude
+airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
+
+# Step 3: Ensure the Airbnb data has 'longitude' and 'latitude' columns and create geometry
+airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Step 4: Convert the DataFrame to GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry')
+
+# Step 5: Ensure the CRS of both dataframes match (EPSG:4326 for both)
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+airbnb_gdf = airbnb_gdf.set_crs("EPSG:4326", allow_override=True)
+
+# Step 6: Spatial join to get Airbnb points within each LSOA
+airbnb_in_lsoa = gpd.sjoin(airbnb_gdf, lsoa_data, how="inner", predicate="within")
+
+# Step 7: Clean the price column (remove '$' and convert to numeric)
+airbnb_in_lsoa['price'] = airbnb_in_lsoa['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
+
+# Step 8: Calculate average price for each LSOA
+average_price = airbnb_in_lsoa.groupby('LSOA11CD')['price'].mean().reset_index()
+average_price.rename(columns={'price': 'average_price'}, inplace=True)
+
+# Step 9: Calculate Airbnb density (number of Airbnb listings per LSOA area)
+# First, calculate the area for each LSOA (in square meters)
+lsoa_data['area'] = lsoa_data.geometry.area  # in square meters
+
+# Count the number of Airbnb listings within each LSOA
+airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD').size().reset_index(name='airbnb_count')
+
+# Merge Airbnb density count with LSOA data
+lsoa_data = lsoa_data.merge(airbnb_density, on='LSOA11CD', how='left')
+
+# Step 10: Calculate Airbnb density per square kilometer
+# Convert area from square meters to square kilometers
+lsoa_data['area_km2'] = lsoa_data['area'] / 1e6
+
+# Calculate Airbnb density (listings per square kilometer)
+lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
+
+# Step 11: Merge the average price data back with LSOA data
+lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
+
+# Step 12: Optionally, save the results to a new CSV or Shapefile
+lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].to_csv('data/LSOA_airbnb_summary.csv', index=False)
+
+# Step 13: Print the first few rows to check the result
+print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].head())
+```
+
+### merge all data
+
+```{python}
+# 查看每个数据集的列名
+print(airbnb_df.columns)
+print(houseprice_df.columns)
+print(pop_density_df.columns)
+print(imd_df.columns)
+print(hotel_density_df.columns)
+print(tourist_density_df.columns)
+print(avptai_df.columns)
+```
+
+```{python}
+# Load all the datasets
+airbnb_df = pd.read_csv('data/LSOA_airbnb_summary.csv')
+houseprice_df = pd.read_csv('data/LSOA_London_houseprice_change.csv')
+pop_density_df = pd.read_csv('data/LSOA_population_density.csv')
+imd_df = pd.read_csv('data/LSOA_IMD_london.csv')
+hotel_density_df = pd.read_csv('data/lsoa_hotel_density.csv')
+tourist_density_df = pd.read_csv('data/london_lsoa_tourist_density.csv')
+avptai_df = pd.read_csv('data/LSOA_AvPTAI.csv')
+
+# Step 1: Merge the datasets based on the correct columns
+merged_data = airbnb_df.merge(houseprice_df, left_on='LSOA11CD', right_on='LSOA code', how='left')
+merged_data = merged_data.merge(pop_density_df, left_on='LSOA11CD', right_on='LSOA Code', how='left')
+merged_data = merged_data.merge(imd_df, left_on='LSOA11CD', right_on='LSOA code (2011)', how='left')
+merged_data = merged_data.merge(hotel_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(tourist_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(avptai_df, left_on='LSOA11CD', right_on='LSOA2011', how='left')
+
+# Step 2: Select only the relevant columns
+final_data = merged_data[['LSOA11CD', 'average_price', 'airbnb_density', 'Price_Change', 
+                          'People per Sq Km', 'Income Score (rate)', 'hotel_density', 
+                          'tourist_attraction_density', 'AvPTAI2015']]
+
+# Step 3: Check the first few rows of the final data
+print(final_data.head())
+
+# Step 4: Optionally, save the final merged data to a CSV file
+final_data.to_csv('data/final_LSOA_data.csv', index=False)
+```
 
 
 

@@ -769,39 +769,39 @@ import pandas as pd
 from shapely.geometry import Point
 
 # 1. Load LSOA boundary data
-lsoa_shp_path = "data/London/LSOA_2011_London_gen_MHW.shp"  
-lsoa_data = gpd.read_file(lsoa_shp_path)  # Load shapefile into GeoDataFrame
-lsoa_data = lsoa_data.to_crs("EPSG:4326")  # Ensure the CRS is WGS84 for compatibility with OSM data
+lsoa_shp_path = "data/London/LSOA_2011_London_gen_MHW.shp"
+lsoa_data = gpd.read_file(lsoa_shp_path)
 
-# Calculate the area of each LSOA in square kilometers
+# (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
 lsoa_data['area_km2'] = lsoa_data['geometry'].area / 10**6
 
-# 2. Get the London boundary
-london_boundary = lsoa_data.geometry.unary_union  # Merge all LSOA boundaries into a single polygon
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# 2. Get the London boundary 
+london_boundary = lsoa_data.dissolve().geometry.iloc[0]
 
 # 3. Fetch hotel data from OpenStreetMap
-# Use OSMnx's features_from_polygon method
-hotels = ox.features_from_polygon(london_boundary, tags={"tourism": "hotel"})
+hotels = ox.features_from_polygon(london_boundary, tags={"tourism": "hotel"}) 
 
 # Convert the hotel data into a GeoDataFrame and retain only geometry
 hotels_gdf = gpd.GeoDataFrame(hotels[['geometry', 'name']].dropna(subset=['geometry']), crs="EPSG:4326")
 
 # 4. Spatially join hotels to their respective LSOA units
-# Use GeoPandas's sjoin method
 hotels_in_lsoa = gpd.sjoin(hotels_gdf, lsoa_data, how="inner", predicate="within")
 
 # Count the number of hotels per LSOA
 hotel_counts = hotels_in_lsoa.groupby('LSOA11CD').size().reset_index(name='hotel_count')
 
 # 5. Calculate hotel density (number of hotels per square kilometer)
-# Merge hotel counts back into the LSOA data
 lsoa_data = lsoa_data.merge(hotel_counts, on='LSOA11CD', how='left')
-lsoa_data['hotel_count'] = lsoa_data['hotel_count'].fillna(0)  # Fill missing values with 0
+lsoa_data['hotel_count'] = lsoa_data['hotel_count'].fillna(0)
 lsoa_data['hotel_density'] = lsoa_data['hotel_count'] / lsoa_data['area_km2']
 
 # 6. Save results to a CSV file
-output_csv_path = "data/lsoa_hotel_density.csv"  # Path for the output CSV file
+output_csv_path = "data/lsoa_hotel_density.csv"
 lsoa_data[['LSOA11CD', 'hotel_count', 'area_km2', 'hotel_density']].to_csv(output_csv_path, index=False)
+
 print(f"Hotel density data saved to {output_csv_path}")
 ```
 
@@ -840,13 +840,10 @@ import pandas as pd
 # Load the data
 data = pd.read_csv('data/London_Housing_Data.csv')
 
-#  Check the column names to ensure they are correct
-print(data.columns)  # This will print all column names
-
 # Strip any leading/trailing spaces in the column names
 data.columns = data.columns.str.strip()
 
-#  Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
+# Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
 data['Year ending Mar 2023'] = pd.to_numeric(data['Year ending Mar 2023'], errors='coerce')
 data['Year ending Dec 2018'] = pd.to_numeric(data['Year ending Dec 2018'], errors='coerce')
 
@@ -854,19 +851,23 @@ data['Year ending Dec 2018'] = pd.to_numeric(data['Year ending Dec 2018'], error
 missing_values = data[['Year ending Mar 2023', 'Year ending Dec 2018']].isnull().sum()
 print(f"Missing values in Year columns:\n{missing_values}")
 
-# Optionally, drop rows with missing values for price calculations (only for the year columns)
-data_clean = data.dropna(subset=['Year ending Mar 2023', 'Year ending Dec 2018'])
+# Create a copy of the data to avoid SettingWithCopyWarning
+data_clean = data.copy()
 
-#  Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
-data_clean['Price_Change'] = (data_clean['Year ending Mar 2023'] - data_clean['Year ending Dec 2018']) / data_clean['Year ending Dec 2018'] * 100
+# Drop rows with missing values for price calculations (only for the year columns)
+data_clean = data_clean.dropna(subset=['Year ending Mar 2023', 'Year ending Dec 2018'])
 
-#  Merge the price change back with the original data (using LSOA_code as the key)
+# Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
+# Use .loc to avoid SettingWithCopyWarning
+data_clean.loc[:, 'Price_Change'] = ((data_clean['Year ending Mar 2023'] - data_clean['Year ending Dec 2018']) / data_clean['Year ending Dec 2018'] * 100)
+
+# Merge the price change back with the original data (using LSOA_code as the key)
 data_with_change = pd.merge(data, data_clean[['LSOA code', 'Price_Change']], on='LSOA code', how='left')
 
-#  Ensure data is sorted by LSOA code
+# Ensure data is sorted by LSOA code
 data_with_change_sorted = data_with_change.sort_values(by=['LSOA code'])
 
-#Save the result to a new CSV file
+# Save the result to a new CSV file
 data_with_change_sorted[['LSOA code', 'Price_Change']].to_csv('data/LSOA_London_houseprice_change.csv', index=False)
 
 print("House price change data saved to 'LSOA_London_houseprice_change.csv'")
@@ -903,19 +904,22 @@ airbnb_data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory
 ```
 
 ```{python}
+import geopandas as gpd
+import pandas as pd
 from shapely.geometry import Point
+
 # Filter out only the columns we need
 columns_to_keep = ['id', 'property_type', 'room_type', 'price', 'review_scores_rating', 'review_scores_value', 'longitude', 'latitude']
-airbnb_filtered = airbnb_data[columns_to_keep]
+airbnb_filtered = airbnb_data[columns_to_keep].copy() 
 
-#  Convert longitude and latitude to geometry (Point)
-airbnb_filtered['geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+airbnb_filtered.loc[:, 'geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
 # Create a GeoDataFrame
 airbnb_gdf = gpd.GeoDataFrame(airbnb_filtered, geometry='geometry', crs="EPSG:4326")  # Ensure CRS is WGS84
 
-#  Optionally, save the filtered data to a new CSV file (or to a shapefile if you want to preserve the geometry)
-airbnb_gdf.to_csv('data/filtered_airbnb_data_with_geometry.csv', index=False)
+airbnb_filtered.to_csv('data/filtered_airbnb_data.csv', index=False)
+
+airbnb_gdf.to_file('data/filtered_airbnb_data.geojson', driver='GeoJSON')
 
 # Print the cleaned data
 print(airbnb_gdf.head())
@@ -924,58 +928,52 @@ print(airbnb_gdf.head())
 ### Calculating Airbnb Density and Average Price per Night for LSOA Units
 
 ```{python}
-#  Load the LSOA boundary data
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# Load the LSOA boundary data
 lsoa_shp_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
 lsoa_data = gpd.read_file(lsoa_shp_path)
 
-#  Load the Airbnb data with latitude and longitude
-airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
+# Use the projected coordinate system to calculate the area (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
+lsoa_data['area_km2'] = lsoa_data.geometry.area / 10**6  # Convert area from square meters to square kilometers
 
-#  Ensure the Airbnb data has 'longitude' and 'latitude' columns and create geometry
+# Reproject back to WGS84 for subsequent spatial operations
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# Load the Airbnb data with latitude and longitude
+airbnb_df = pd.read_csv('data/filtered_airbnb_data.csv')
+
+# Ensure the Airbnb data has latitude and longitude columns and create geometries
 airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
-#  Convert the DataFrame to GeoDataFrame
-airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry')
+# Convert DataFrame to GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
 
-# Ensure the CRS of both dataframes match (EPSG:4326 for both)
-lsoa_data = lsoa_data.to_crs("EPSG:4326")
-airbnb_gdf = airbnb_gdf.set_crs("EPSG:4326", allow_override=True)
-
-#  Spatial join to get Airbnb points within each LSOA
+# Spatial join to get the Airbnb points within each LSOA
 airbnb_in_lsoa = gpd.sjoin(airbnb_gdf, lsoa_data, how="inner", predicate="within")
 
-#  Clean the price column (remove '$' and convert to numeric)
+# Clean the price column
 airbnb_in_lsoa['price'] = airbnb_in_lsoa['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
 
-# Calculate average price for each LSOA
+# Calculate the average price for each LSOA
 average_price = airbnb_in_lsoa.groupby('LSOA11CD')['price'].mean().reset_index()
 average_price.rename(columns={'price': 'average_price'}, inplace=True)
 
-#  Calculate Airbnb density (number of Airbnb listings per LSOA area)
-# First, calculate the area for each LSOA (in square meters)
-lsoa_data['area'] = lsoa_data.geometry.area  # in square meters
+# Calculate the number of Airbnb listings in each LSOA
+airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD')['price'].count().reset_index(name='airbnb_count')
 
-# Count the number of Airbnb listings within each LSOA
-airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD').size().reset_index(name='airbnb_count')
-
-# Merge Airbnb density count with LSOA data
+# Merge average price and Airbnb count with LSOA data
+lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
 lsoa_data = lsoa_data.merge(airbnb_density, on='LSOA11CD', how='left')
 
-#  Calculate Airbnb density per square kilometer
-# Convert area from square meters to square kilometers
-lsoa_data['area_km2'] = lsoa_data['area'] / 1e6
-
-# Calculate Airbnb density (listings per square kilometer)
+# Calculate Airbnb density (number of listings per square kilometer)
 lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
 
-#  Merge the average price data back with LSOA data
-lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
-
-#  Optionally, save the results to a new CSV or Shapefile
-lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].to_csv('data/LSOA_airbnb_summary.csv', index=False)
-
-#  Print the first few rows to check the result
-print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_density']].head())
+# Display the result
+print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_count', 'airbnb_density']].head())
 ```
 
 ### Merge all data
@@ -1049,19 +1047,25 @@ print(final_data.isnull().sum())
 
 ```{python}
 from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
-# Create a list of numerical columns for standardization
-numerical_columns = ['average_price', 'airbnb_density', 'price_change', 
+# Print the column names
+print(final_data.columns)
+
+# Dynamically create numerical_columns
+numerical_columns = [col for col in ['average_price', 'airbnb_density', 'price_change', 
                      'people per sq km', 'income score (rate)', 
-                     'hotel_density', 'tourist_attraction_density', 'avptai2015']
+                     'hotel_density', 'tourist_attraction_density', 'avptai2015'] if col in final_data.columns]
 
-#  Initialize StandardScaler
+print("Columns to be standardized:", numerical_columns)
+
+# Initialize StandardScaler
 scaler = StandardScaler()
 
-#  Apply Z-score standardization to the numerical columns
-final_data[numerical_columns] = scaler.fit_transform(final_data[numerical_columns])
+# Safely apply standardization using .loc
+final_data.loc[:, numerical_columns] = scaler.fit_transform(final_data[numerical_columns])
 
-#  Check the result
+# Check the result
 print(final_data.head())
 ```
 
@@ -1077,7 +1081,7 @@ from sklearn.metrics import silhouette_score
 
 # Assuming final_data is your merged dataset
 #  Select relevant columns (excluding 'lsoa11cd' for clustering)
-clustering_data = final_data.drop(columns=['lsoa11cd'])
+clustering_data = final_data.drop(columns=['LSOA11CD'])
 
 #  Standardize the data (Z-score scaling)
 scaler = StandardScaler()
@@ -1128,7 +1132,7 @@ kmeans = KMeans(n_clusters=optimal_k, random_state=42)
 final_data['Cluster'] = kmeans.fit_predict(X_scaled)
 
 # Check the resulting clusters
-print(final_data[['lsoa11cd', 'Cluster']].head())
+print(final_data[['LSOA11CD', 'Cluster']].head())
 ```
 
 ### KMeans clustering
@@ -1167,7 +1171,6 @@ print("\nClustering results have been saved to 'london_airbnb_clustering_results
 
 ```{python}
 import matplotlib.pyplot as plt
-from shapely.geometry import Point
 
 # Load LSOA shapefile
 shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
@@ -1178,38 +1181,32 @@ clustering_results = pd.read_csv('data/london_airbnb_clustering_results.csv')
 clustering_results.rename(columns={'lsoa11cd': 'LSOA11CD'}, inplace=True)
 lsoa_gdf = lsoa_gdf.merge(clustering_results[['LSOA11CD', 'Cluster']], on='LSOA11CD', how='left')
 
-# Load Airbnb data with latitude and longitude
-airbnb_df = pd.read_csv('data/filtered_airbnb_data_with_geometry.csv')
-airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
-airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
-
-# Ensure the CRS of all data matches
+# Ensure the CRS matches
 lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
-airbnb_gdf = airbnb_gdf.to_crs("EPSG:4326")
 
 # Create a map plot
-fig, ax = plt.subplots(figsize=(12, 12))  # Adjust figure size
+fig, ax = plt.subplots(figsize=(12, 12))
 
-# Define softer cluster colors
-cluster_colors = {0: '#FFB6C1', 1: '#ADD8E6', 2: '#90EE90'}  # Light pink, light blue, light green
+# Define soft pastel cluster colors (replacing purple with blue)
+cluster_colors = {
+    0: '#A7C7E7',  # Soft Blue
+    1: '#F4A300',  # Soft Peach
+    2: '#F1C6C2'   # Soft Rose
+}
 
 # Plot LSOA regions colored by cluster
 for cluster, color in cluster_colors.items():
-    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(ax=ax, color=color, edgecolor='grey', linewidth=0.3, label=f'Cluster {cluster}')
+    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(
+        ax=ax, color=color, edgecolor='gray', linewidth=0.3, label=f'Cluster {cluster}'
+    )
 
-# Plot Airbnb point data with transparency and smaller size
-airbnb_gdf.plot(ax=ax, markersize=1, color='purple', alpha=0.3, label='Airbnb Listings')
-
-# Adjust the extent (zoom to the full London area)
-ax.set_xlim(lsoa_gdf.total_bounds[0] - 0.01, lsoa_gdf.total_bounds[2] + 0.01)
-ax.set_ylim(lsoa_gdf.total_bounds[1] - 0.01, lsoa_gdf.total_bounds[3] + 0.01)
-
-# Clean up the layout
-ax.set_title("K-Means Clustering Results with Airbnb Listings", fontsize=14)
+# Layout and legend styling
+ax.set_title("K-Means Clustering Results By LSOA", fontsize=16, color="#333333", fontweight='bold')
 ax.axis("off")
-plt.legend(loc='upper left', fontsize=10)
+plt.legend(loc='lower left', fontsize=12, frameon=True, title="Clusters", title_fontsize=14)
 
 # Show the map
+plt.tight_layout()
 plt.show()
 ```
 

@@ -1079,80 +1079,94 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-# Assuming final_data is your merged dataset
-#  Select relevant columns (excluding 'lsoa11cd' for clustering)
+# Create an explicit copy of the dataframe
+final_data = final_data.copy()
+
+# Select relevant columns (excluding 'lsoa11cd' for clustering)
 clustering_data = final_data.drop(columns=['LSOA11CD'])
 
-#  Standardize the data (Z-score scaling)
+# Standardize the data (Z-score scaling)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(clustering_data)
 
-#  Elbow Method for K value selection
-inertia = []
-K_range = range(1, 11)  # Check for K between 1 and 10 (you can adjust the range)
+# Elbow Method and Silhouette Score in one figure
+plt.figure(figsize=(12, 5))
 
+# Elbow Method subplot
+plt.subplot(1, 2, 1)
+inertia = []
+K_range = range(1, 11)
 for k in K_range:
     kmeans = KMeans(n_clusters=k, random_state=42)
     kmeans.fit(X_scaled)
     inertia.append(kmeans.inertia_)
 
-# Plot the inertia to visualize the "elbow"
-plt.figure(figsize=(8, 6))
 plt.plot(K_range, inertia, marker='o')
 plt.title("Elbow Method for Optimal K")
 plt.xlabel("Number of Clusters (K)")
 plt.ylabel("Inertia")
 plt.grid(True)
-plt.show()
 
-# Silhouette Coefficient for K value selection
+# Silhouette Coefficient subplot
+plt.subplot(1, 2, 2)
 silhouette_scores = []
-K_range = range(2, 11)  # Silhouette score is not defined for 1 cluster, so start from 2
-
+K_range = range(2, 11)
 for k in K_range:
     kmeans = KMeans(n_clusters=k, random_state=42)
     kmeans.fit(X_scaled)
     score = silhouette_score(X_scaled, kmeans.labels_)
     silhouette_scores.append(score)
 
-# Plot the silhouette scores
-plt.figure(figsize=(8, 6))
 plt.plot(K_range, silhouette_scores, marker='o', color='blue')
 plt.title("Silhouette Scores for Optimal K")
 plt.xlabel("Number of Clusters (K)")
 plt.ylabel("Silhouette Score")
 plt.grid(True)
+
+plt.tight_layout()
 plt.show()
 
-# After inspecting the elbow plot and silhouette scores, choose the optimal K (e.g., 3)
-optimal_k = 3  # Replace with the value you choose
+# Choose optimal K based on the plots (e.g., 3)
+optimal_k = 3
 
-# Perform KMeans clustering with the chosen number of clusters
+# Perform KMeans clustering
 kmeans = KMeans(n_clusters=optimal_k, random_state=42)
-final_data['Cluster'] = kmeans.fit_predict(X_scaled)
+cluster_labels = kmeans.fit_predict(X_scaled)
+final_data['Cluster'] = cluster_labels
 
-# Check the resulting clusters
-print(final_data[['LSOA11CD', 'Cluster']].head())
+# Cluster Characteristics
+# 仅对数值列进行均值计算
+numeric_columns = final_data.select_dtypes(include=[np.number]).columns.tolist()
+numeric_columns = [col for col in numeric_columns if col != 'Cluster']
+
+cluster_means = final_data.groupby('Cluster')[numeric_columns].mean()
+print("Cluster Means:")
+print(cluster_means)
+
+# Count of instances in each cluster
+cluster_counts = final_data['Cluster'].value_counts()
+print("\nCluster Sizes:")
+print(cluster_counts)
 ```
 
 ### KMeans clustering
 
 ```{python}
 from sklearn.cluster import KMeans
-import pandas as pd
 
-# Run KMeans clustering with K=3
-kmeans = KMeans(n_clusters=3, random_state=42)  # Set K=3 for clustering
-final_data['Cluster'] = kmeans.fit_predict(X_scaled)  # Add cluster labels to the DataFrame
+# Determine the optimal number of clusters based on the plots
+optimal_k = 4
+
+# Perform K-Means clustering with the optimal number of clusters
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)
 
 # Display clustering results (first few rows)
 print("Clustering results:")
-print(final_data[['lsoa11cd', 'Cluster']].head())
+print(final_data[['LSOA11CD', 'Cluster']].head())
 
 # Analyze the mean characteristics of each cluster (numerical features only)
-numerical_columns = ['average_price', 'airbnb_density', 'price_change', 
-                     'people per sq km', 'income score (rate)', 
-                     'hotel_density', 'tourist_attraction_density', 'avptai2015']
+numerical_columns = [col for col in final_data.columns if col != 'LSOA11CD' and col != 'Cluster']
 cluster_summary = final_data.groupby('Cluster')[numerical_columns].mean()
 print("\nCluster summary (mean values of features):")
 print(cluster_summary)
@@ -1171,6 +1185,10 @@ print("\nClustering results have been saved to 'london_airbnb_clustering_results
 
 ```{python}
 import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+from matplotlib.patches import Patch
+from matplotlib.legend_handler import HandlerPatch
 
 # Load LSOA shapefile
 shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
@@ -1187,12 +1205,19 @@ lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
 # Create a map plot
 fig, ax = plt.subplots(figsize=(12, 12))
 
-# Define soft pastel cluster colors (replacing purple with blue)
+# Define softer and aesthetically pleasing cluster colors (without green)
 cluster_colors = {
-    0: '#A7C7E7',  # Soft Blue
-    1: '#F4A300',  # Soft Peach
-    2: '#F1C6C2'   # Soft Rose
+    0: '#F6A8B2',  # Soft pink
+    1: '#F7D2A1',  # Warm peach
+    2: '#B3CDE0',  # Soft light blue
+    3: '#F2C9E3'   # Light lavender
 }
+
+# Custom legend handler for PatchCollection
+class HandlerColoredPatch(HandlerPatch):
+    def create_artists(self, legend, orig_handle,
+                       xdescent, ydescent, width, height, fontsize, trans):
+        return [Patch(facecolor=orig_handle.get_facecolor(), edgecolor='gray', linewidth=0.3)]
 
 # Plot LSOA regions colored by cluster
 for cluster, color in cluster_colors.items():
@@ -1201,11 +1226,18 @@ for cluster, color in cluster_colors.items():
     )
 
 # Layout and legend styling
-ax.set_title("K-Means Clustering Results By LSOA", fontsize=16, color="#333333", fontweight='bold')
-ax.axis("off")
-plt.legend(loc='lower left', fontsize=12, frameon=True, title="Clusters", title_fontsize=14)
+ax.set_title("K-Means Clustering Results by LSOA", fontsize=16)
+ax.set_xlabel("Longitude", fontsize=12)
+ax.set_ylabel("Latitude", fontsize=12)
 
-# Show the map
+# Adjust the legend to handle custom colors
+legend_labels = [Patch(facecolor=color, edgecolor='gray', label=f'Cluster {cluster}') for cluster, color in cluster_colors.items()]
+ax.legend(handles=legend_labels, title="Clusters", loc='upper right', fontsize=12)
+
+# Remove axis for a cleaner map
+ax.set_axis_off()
+
+# Display the map
 plt.tight_layout()
 plt.show()
 ```

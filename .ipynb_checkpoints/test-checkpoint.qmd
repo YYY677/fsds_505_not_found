@@ -946,7 +946,6 @@ print(final_data.head())
 #### 7.3.3 Elbow Method and Silhouette Coefficient
 
 ```{python}
-#| output: false
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
@@ -1070,7 +1069,6 @@ print("\nClustering results have been saved to 'london_airbnb_clustering_results
 #### 7.3.5 Plot K-Means Clustering Result
 
 ```{python}
-#| output: false
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd

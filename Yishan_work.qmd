@@ -1019,7 +1019,7 @@ print(final_data.head())
 final_data.to_csv('data/final_LSOA_data.csv', index=False)
 ```
 
-### Checking and cleaning the data before 
+### Check and clean the data  
 
 ```{python}
 # Step 1: Check the column names for consistency
@@ -1044,6 +1044,7 @@ print(final_data.isnull().sum())
 ```
 
 ###  Standardization (Z-score scaling) 
+ - To scale data to have a mean of 0 and a standard deviation of 1.
 
 ```{python}
 from sklearn.preprocessing import StandardScaler
@@ -1205,12 +1206,12 @@ lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
 # Create a map plot
 fig, ax = plt.subplots(figsize=(12, 12))
 
-# Define softer and aesthetically pleasing cluster colors (without green)
+# Define softer and more pastel cluster colors
 cluster_colors = {
-    0: '#F6A8B2',  # Soft pink
-    1: '#F7D2A1',  # Warm peach
-    2: '#B3CDE0',  # Soft light blue
-    3: '#F2C9E3'   # Light lavender
+    0: '#F6A8B2',  # Soft pastel pink
+    1: '#FFE5B4',  # Soft pastel peach
+    2: '#C7CEEA',  # Soft pastel blue
+    3: '#E0BBE4'   # Soft pastel lavender
 }
 
 # Custom legend handler for PatchCollection
@@ -1226,7 +1227,7 @@ for cluster, color in cluster_colors.items():
     )
 
 # Layout and legend styling
-ax.set_title("K-Means Clustering Results by LSOA", fontsize=16)
+ax.set_title("K-Means Clustering Results by LSOA", fontsize=16, fontweight='light')
 ax.set_xlabel("Longitude", fontsize=12)
 ax.set_ylabel("Latitude", fontsize=12)
 

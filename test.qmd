@@ -989,6 +989,7 @@ print(correlation_with_targets)
 ```
 
 ```{python}
+
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # Select the required independent variables
@@ -1017,23 +1018,38 @@ for target in target_columns:
     y = Airbnb_with_alldata[target]
     X = sm.add_constant(X)  # Add an intercept term
     model = sm.OLS(y, X).fit()
-    #print(f"Regression results for {target}:")
+    print(f"Regression results for {target}:")
     #print(model.summary())
-    # 提取主要结果
+    
     #print("R-squared:", round(model.rsquared, 3))
     #print("Adjusted R-squared:", round(model.rsquared_adj, 3))
     #print("F-statistic:", round(model.fvalue, 3))
     #print("P-values:", model.pvalues.round(3))
     #print("Coefficients:", model.params.round(3))
-    # 将回归结果保存为图片
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.text(0, 1, model.summary(), fontsize=10, family='monospace', verticalalignment='top')
-    ax.axis('off')  # 关闭坐标轴
-    plt.savefig('regression_results.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    
+    # save result as picture
+    #fig, ax = plt.subplots(figsize=(10, 8))
+    #ax.text(0, 1, model.summary(), fontsize=10, family='monospace', verticalalignment='top')
+    #ax.axis('off')  # 关闭坐标轴
+    #plt.savefig('regression_results.png', bbox_inches='tight', dpi=300)
+    #plt.show()
+
+    # select the main parameters
+    results_df = pd.DataFrame({
+    'Coefficient': model.params.round(3),
+    'Standard Error': model.bse.round(3),
+    't-value': model.tvalues.round(3),
+    'P-value': model.pvalues.round(3),
+    'R-squared': round(model.rsquared, 3),
+     #'Adj R-squared': round(model.rsquared_adj, 3),
+    #'F-statistic': round(model.fvalue, 3)
+})
+    #print(tabulate(results_df, headers='keys', tablefmt='grid'))
+    display(results_df)
 ```
 
 The model fits well, including:
+
 - The Houseprice_median model performed best, explaining 53.2% of the fluctuations
 - Population_per_square_kilometre model was second, explaining 32.4% of the fluctuations.
 - The Housesales_median model performs the worst, explaining only 7.8%.
@@ -1042,6 +1058,26 @@ The model fits well, including:
 - Reviews_per_month and Review_scores_value are significant in some models, but in different directions.
 - Airbnb_price is only significant in the Houseprice_median model.
 
+<<<<<<< HEAD
+```{python}
+#| output: false
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Distribution of variables
+sns.pairplot(numeric_data[['Houseprice_median', 'Airbnb_price', 'Airbnb_availability_365', 'Reviews_per_month', 'Review_scores_value','Airbnb_count']])
+plt.show()
+
+# Regression residual analysis
+sns.residplot(x=model.predict(X), y=model.resid)
+plt.xlabel('Fitted Values')
+plt.ylabel('Residuals')
+plt.show()
+```
+
+=======
+>>>>>>> 344dd3092d845335ca6edd5c69587238c25747c5
 ### 7.3 The Impact of Airbnb on London Neighborhoods: K-Means Geodemographic Classification
 
 #### 7.3.1 Data processing
@@ -1600,7 +1636,11 @@ plt.show()
 
 ### 8. Conclusion and Reflection
 
+<<<<<<< HEAD
+This study explores Airbnb's impact on London's neighbourhoods.The analysis indicates that high Airbnb rental prices do not always correspond with high housing prices, with areas like Bishop's showing higher Airbnb rents despite lower housing costs. The multiple linear regression model indicate that community housing prices are most affected by Airbnb, and population and house sales are also affected to varying degrees. K-means clustering categorizes areas into tourist hubs, at-risk zones, emerging areas, and low-impact zones. The study recommends regulating Airbnb density in high-impact areas, protecting affordable housing, and balancing tourism with long-term housing needs. Moreover, challenges related to accuracy, legality, and ethics must be acknowledged. Future research should combine more comprehensive data to enhance the result.
+=======
 This study explores Airbnb's impact on London's neighbourhoods.The analysis indicates that high Airbnb rental prices do not always correspond with high housing prices, with areas like Bishop's showing higher Airbnb rents despite lower housing costs. Multiple linear regression models reveal that Airbnb listings, reviews, and availability significantly influence housing prices and population density. K-means clustering categorizes areas into tourist hubs, at-risk zones, emerging areas, and low-impact zones. The study recommends regulating Airbnb density in high-impact areas, protecting affordable housing, and balancing tourism with long-term housing needs. Moreover, challenges related to accuracy, legality, and ethics must be acknowledged. Future research should combine more comprehensive data to enhance the result.
+>>>>>>> 344dd3092d845335ca6edd5c69587238c25747c5
 
 ## Sustainable Authorship Tools
 

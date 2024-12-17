@@ -1041,7 +1041,6 @@ results3, results4
 ```
 
 ```{python}
-
 # 计算 VIF 的函数
 def calculate_vif(X):
     vif_data = pd.DataFrame()
@@ -1072,7 +1071,6 @@ final_vif = calculate_vif(X_cleaned)
 # 输出最终特征集及其 VIF 值
 print("Final features after removing multicollinearity:")
 print(final_vif)
-
 ```
 
 ```{python}
@@ -1108,4 +1106,3 @@ results3, results4
 
 Prices and number of homes sold:
 In the same multi-collinearity processing, we found through model analysis that factors such as price, quantity, monthly number of reviews and review scores on Airbnb would affect the house price of ward in the UK to a degree of 63%, but for the annual house sales, there was little influence, and only 1.8% of the change was related to Airbnb.
-

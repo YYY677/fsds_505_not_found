@@ -1,0 +1,1257 @@
+---
+bibliography: bio.bib
+csl: harvard-cite-them-right.csl
+title: Group Name's Group Project
+execute:
+  echo: false
+  freeze: true
+format:
+  html:
+    code-copy: true
+    code-link: true
+    toc: true
+    toc-title: On this page
+    toc-depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  pdf:
+    include-in-header:
+      text: |
+        \addtokomafont{disposition}{\rmfamily}
+    papersize: a4
+    geometry:
+      - top=25mm
+      - left=40mm
+      - right=30mm
+      - bottom=25mm
+      - heightrounded
+    toc: false
+    number-sections: false
+    colorlinks: true
+    highlight-style: github
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.4
+  kernelspec:
+    display_name: Python (base)
+    language: python
+    name: base
+---
+
+```{python}
+#| echo: false
+import os
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+from requests import get
+import requests
+from urllib.parse import urlparse
+from functools import wraps
+import zipfile
+import shutil
+```
+
+```{python}
+# This code chunk is to check if the whole data file exists already. If not, down from remote repository.
+
+# configuration parameter
+GITHUB_ZIP_URL = "https://github.com/YYY677/fsds_505_not_found/archive/refs/heads/master.zip"
+TARGET_FOLDER = "fsds_505_not_found-master/data"  # GitHub path
+LOCAL_FOLDER = "./data"  # local file path
+
+try:
+    # check if the folder already exists
+    if os.path.exists(LOCAL_FOLDER):
+        print(f"The folder '{LOCAL_FOLDER}' already exists locally.")
+    else:
+        # download zip file from GitHub
+        zip_path = "repo.zip"
+        print("Downloading the repository ZIP file...")
+        try:
+            response = requests.get(GITHUB_ZIP_URL, timeout=30)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading the ZIP file: {e}")
+            exit(1)
+
+        # write the ZIP file locally
+        try:
+            with open(zip_path, "wb") as f:
+                f.write(response.content)
+        except IOError as e:
+            print(f"Error saving the ZIP file: {e}")
+            exit(1)
+
+        # extract the ZIP file
+        print("Extracting the ZIP file...")
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(".")
+        except zipfile.BadZipFile as e:
+            print(f"Error extracting the ZIP file: {e}")
+            os.remove(zip_path)
+            exit(1)
+
+        # move the target folder to the desired location
+        print("Moving the target folder to the desired location...")
+        try:
+            shutil.move(TARGET_FOLDER, LOCAL_FOLDER)
+        except FileNotFoundError as e:
+            print(f"Error moving the folder: {e}")
+            exit(1)
+        except shutil.Error as e:
+            print(f"Error during folder move: {e}")
+            exit(1)
+
+        # clean up temporary files
+        print("Cleaning up temporary files...")
+        try:
+            os.remove(zip_path)
+            shutil.rmtree("fsds_505_not_found-master")
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+            # Not exiting here as the main task is complete
+
+        print(f"The folder has been successfully downloaded to '{LOCAL_FOLDER}'.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+```
+
+```{python}
+# This chunk is to down seperate files from remote repo.
+
+def download_file(url, save_path):
+    """
+    Downloads a file from the given URL and saves it to the specified local path.
+    """
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(save_path, 'wb') as file:
+            file.write(response.content)
+        print(f"Download completed: {save_path}")
+    else:
+        print(f"Download failed with HTTP status code {response.status_code}, URL: {url}")
+
+def check_and_download(url, local_path):
+    """
+    Checks if a file exists locally; if not, downloads it from the given URL.
+    """
+    if not os.path.exists(local_path):
+        print(f"File does not exist. Downloading: {local_path}")
+        download_file(url, local_path)
+    else:
+        print(f"File already exists: {local_path}")
+
+# URLs and corresponding local save paths
+url_csl = 'https://raw.githubusercontent.com/YYY677/fsds_505_not_found/master/harvard-cite-them-right.csl'
+url_bib = 'https://raw.githubusercontent.com/YYY677/fsds_505_not_found/master/bio.bib'
+
+# Specify local file paths
+local_csl = "harvard-cite-them-right.csl"
+local_bib = "bio.bib"
+
+# Check and download the files
+check_and_download(url_csl, local_csl)
+check_and_download(url_bib, local_bib)
+```
+
+```{python}
+#| echo: false
+host = "https://orca.casa.ucl.ac.uk"
+path = "~jreades/data"
+file = "20240614-London-listings.parquet"
+
+if os.path.exists(file):
+    df = pd.read_parquet(file)
+else:
+    df = pd.read_parquet(f"{host}/{path}/{file}")
+    df.to_parquet(file)
+df.shape
+```
+
+## Declaration of Authorship {.unnumbered .unlisted}
+
+We, `505 not found`, pledge our honour that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+
+Date:
+
+Student Numbers: 
+
+## Brief Group Reflection
+
+| What Went Well | What Was Challenging |
+| -------------- | -------------------- |
+| A              | B                    |
+| C              | D                    |
+
+## Priorities for Feedback
+
+Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
+
+{{< pagebreak >}}
+
+# Response to Questions
+
+See the raw file for examples of how to hide computational output as there is code hidden here.
+
+## 1. Who collected the InsideAirbnb data?
+
+::: {.duedate}
+
+( 2 points; Answer due Week 7 )
+
+As a mission driven, grassroots project, Inside Airbnb relies on the generous support of collaborators who choose to contribute to the project.
+
+1. Murray Cox. Murray is a community artist and activist who uses data, media and technology for social change. He is the founder and current chief data activist of Inside Airbnb.
+2. John Morris. John, an artist and designer, was a founding collaborator who designed and re-designed the website, and is the creative producer of the project's major reports.
+3. Taylor Higgins. Taylor is working on her masters in Florence, Italy at the Scuola di Economia e Statistiche (School of Economics and Statistics) at the Università degli Studi di Firenze with a focus on designing sustainable tourism systems. Taylor is working to build and organise the data and activist communities of Inside Airbnb.
+
+
+
+:::
+
+An inline citation example: As discussed on @insideairbnb, there are many...
+
+A parenthetical citation example: There are many ways to research Airbnb [see, for example, @insideairbnb]... 
+
+
+## 2. Why did they collect the InsideAirbnb data?
+
+::: {.duedate}
+
+( 4 points; Answer due Week 7 )
+
+Inside Airbnb is a mission driven project that provides data and advocacy about Airbnb's impact on residential communities.
+
+"We work towards a vision where communities are empowered with data and information to understand, decide and control the role of renting residential homes to tourists."
+
+
+
+
+:::
+
+```{python}
+#| output: asis
+print(
+    f"One of way to embed output in the text looks like this: after cleaning, we were left with {df.shape[0]:,} rows of data."
+)
+```
+
+This way is also supposed to work (`{python} f"{df.shape[0]:,}" `) but I've found it less reliable.
+
+```{python}
+ax = df.host_listings_count.plot.hist(bins=50)
+ax.set_xlim([0, 500]);
+```
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
+
+## 3. How did they collect it?
+
+::: {.duedate}
+
+( 5 points; Answer due Week 8 )
+
+:::
+
+## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
+
+::: {.duedate}
+
+( 11 points; Answer due Week 9 )
+
+:::
+
+## 5. What ethical considerations does the use of the InsideAirbnb data raise? 
+
+::: {.duedate}
+
+( 18 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+
+## 6. With reference to the InsideAirbnb data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and the types of properties that they list suggest about the nature of Airbnb lettings in London? 
+
+::: {.duedate}
+
+( 15 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+```{python}
+# convert df(pandas) file to gdf(geopandas, which contains spatial column)
+gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=gpd.points_from_xy(df.longitude, df.latitude)).to_crs(27700)
+
+# read data files
+london = gpd.read_file('data/London/London_Borough_Excluding_MHW.shp').to_crs(gdf.crs) # British National Grid
+green = gpd.read_file('data/Greenspace.gpkg').to_crs(27700)
+water = gpd.read_file('data/Water.gpkg').to_crs(27700)
+```
+
+### 6.1 Location of Airbnb listings in London
+
+```{python}
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
+
+# 创建并列子图
+fig, axes = plt.subplots(1, 2, figsize=(16, 12))  # 1行2列
+
+# --- 第一个子图  ---
+london.plot(ax=axes[0], color='whitesmoke', edgecolor='black')
+gdf.plot(ax=axes[0], color='black', marker='o', markersize=1)
+axes[0].set_title('The distribution of Airbnb houses in London',
+                  fontdict={'fontsize': 15, 'fontweight': '3'})
+
+#取消边框
+axes[0].spines['top'].set_visible(False)
+axes[0].spines['right'].set_visible(False)
+axes[0].spines['bottom'].set_visible(False)
+axes[0].spines['left'].set_visible(False)
+
+axes[0].set_xlabel('Longitude')
+axes[0].set_ylabel('Latitude')
+
+# --- 第二个子图 ---
+# Plot all three GeoPackages to the second axes
+
+water.plot(facecolor='xkcd:sky blue', zorder=1, ax=axes[1], label='Water bodies')
+green.plot(facecolor=(0.5, 0.8, 0, 0.6), zorder=2, ax=axes[1], label='Green spaces')
+london.plot(edgecolor='black', facecolor='none', 
+                  linewidth=0.2, zorder=3, ax=axes[1], label='Ward boundaries')
+gdf.to_crs(green.crs).plot(column='price', cmap='viridis', alpha=0.25, 
+                           markersize=1, label='Listings by price', zorder=4, ax=axes[1])
+
+#取消边框
+axes[1].spines['top'].set_visible(False)
+axes[1].spines['right'].set_visible(False)
+axes[1].spines['bottom'].set_visible(False)
+axes[1].spines['left'].set_visible(False)
+
+# 设置范围
+axes[1].set_xlim(501000, 563000)
+axes[1].set_ylim(155000, 202000)
+axes[1].set_title('Map with more information', 
+                  fontdict={'fontsize': 15, 'fontweight': '3'})
+
+# 手动创建图例条目
+legend_handles = [
+    mpatches.Patch(color='xkcd:sky blue', label='Water bodies'),
+    mpatches.Patch(color=(0.5, 0.8, 0, 0.6), label='Green spaces'),
+    mlines.Line2D([], [], color='purple', marker='o', linestyle='None', markersize=1, alpha=0.25, label='Listings'),
+    mlines.Line2D([], [], color=(0.8, 0, 0, 0.5), linewidth=1, label='Borough boundaries')
+]
+
+# 添加自定义图例
+axes[1].legend(handles=legend_handles, title="Legend", loc='lower left', fontsize=10)
+
+
+# 调整布局并显示
+plt.tight_layout()
+plt.show()
+```
+
+* There is a apparent trend that airbnb listings are concentrated in the city center, and the number decreases as it moves into the suburbs. 
+* Although the listings are mainly concentrated in the city centre, it is worth noting that the listings in the central area have several obvious blank areas, which we can see from the chart on the right that this is due to the distribution of green Spaces there.
+
+### 6.2 Analysis of Hosts
+
+```{python}
+# 定义分组范围（例如 0-1, 2-5, 6-10, 11-20, 21+）
+bins = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, float('inf')]  # 更细化的分组区间
+labels = ['1', '2', '3-5', '6-10', '11-20', '21-50', '51-100', '101-200', '201-500', '501+']  # 为每个区间指定标签
+
+# 使用 pd.cut() 将数据分组
+gdf['listings_range'] = pd.cut(gdf['host_listings_count'], bins=bins, labels=labels, right=True)
+
+# 统计每个分组的数量和总数
+range_counts = gdf['listings_range'].value_counts().sort_index()
+total_hosts = range_counts.sum()
+
+# 计算百分比
+percentages = (range_counts / total_hosts) * 100
+
+# 绘制柱状图
+plt.figure(figsize=(8, 6))
+ax = range_counts.plot(kind='bar', color='lightblue')
+
+# 在柱状图上添加百分比标签
+for i, (count, pct) in enumerate(zip(range_counts, percentages)):
+    plt.text(i, count + 0.5, f'{pct:.1f}%', ha='center', va='bottom', fontsize=10)
+
+# 添加标题和标签
+plt.title('Number of Hosts by Listings Count Range')
+plt.xlabel('Listings Count Range')
+plt.ylabel('Number of Hosts')
+plt.xticks(rotation=45)
+
+# 显示图表
+plt.show()
+```
+
+As shown in above picuture, nearly 40 thousand hosts own 1 listing. Two and three to five houses are owned by 10,000 landlords, respectively. And there are a small part of hosts owning dozens of even hundreds of listings (This could mean that theres the landlords are professional and manages multiple listings). 
+
+Given that there are about a total of 85,000 listings, it can be inferred that more than half of the hosts **own multiple properties**. **多房非法性?**
+
+```{python}
+# 确保 'host_since' 是 datetime 格式
+gdf['host_since'] = pd.to_datetime(gdf['host_since'])
+
+# 提取年份信息
+gdf['year'] = gdf['host_since'].dt.year
+
+# --- 统计每年新增的 host_id 数量 ---
+# 确保每个 host_id 只计算一次（每年新增）
+new_hosts_per_year = gdf.drop_duplicates('host_id').groupby('year').size()
+
+# --- 统计每年内的 id 数量（累积计算）---
+# 创建一个年份范围（从最早到最新）
+year_range = range(gdf['year'].min(), gdf['year'].max() + 1)
+
+# 初始化每年运营中的 id 数量
+id_per_year = [gdf[gdf['year'] <= year].shape[0] for year in year_range]
+
+# 创建 DataFrame 并显示结果
+result_df = pd.DataFrame({
+    'Year': year_range,
+    'New Hosts': new_hosts_per_year.reindex(year_range, fill_value=0),  # 填充缺失年份为0
+    'Total IDs': id_per_year
+})
+
+# 绘制图形
+fig, ax1 = plt.subplots(figsize=(12, 6))
+
+# --- 绘制新增 host 数量（柱状图）---
+ax1.bar(result_df['Year'], result_df['New Hosts'], color='blue', label='New Hosts per Year')
+ax1.set_xlabel('Year')
+ax1.set_ylabel('New Hosts', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+
+# --- 创建第二个 y 轴，绘制累计 id 数量（折线图）---
+ax2 = ax1.twinx()
+ax2.plot(result_df['Year'], result_df['Total IDs'], color='orange', marker='o', label='Total IDs')
+ax2.set_ylabel('Listings count', color='orange')
+ax2.tick_params(axis='y', labelcolor='orange')
+
+# --- 添加图例 ---
+fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9))
+
+# --- 设置标题 ---
+plt.title('Yearly New Hosts and Listings on Airbnb in London')
+
+# --- 显示图形 ---
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# 定义分组范围（例如 0-1, 2-5, 6-10, 11-20, 21+）
+bins = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, float('inf')]  # 更细化的分组区间
+labels = ['1', '2', '3-5', '6-10', '11-20', '21-50', '51-100', '101-200', '201-500', '501+']  # 为每个区间指定标签
+
+# 使用 pd.cut() 将数据分组
+gdf['listings_range'] = pd.cut(gdf['host_listings_count'], bins=bins, labels=labels, right=True)
+
+# 统计每个分组的数量和总数
+range_counts = gdf['listings_range'].value_counts().sort_index()
+total_hosts = range_counts.sum()
+percentages = (range_counts / total_hosts) * 100
+
+# 确保 'host_since' 是 datetime 格式
+gdf['host_since'] = pd.to_datetime(gdf['host_since'])
+gdf['year'] = gdf['host_since'].dt.year
+
+# 统计每年新增的 host_id 数量
+new_hosts_per_year = gdf.drop_duplicates('host_id').groupby('year').size()
+
+# 初始化每年运营中的 id 数量
+year_range = range(gdf['year'].min(), gdf['year'].max() + 1)
+id_per_year = [gdf[gdf['year'] <= year].shape[0] for year in year_range]
+
+# 创建结果 DataFrame
+result_df = pd.DataFrame({
+    'Year': year_range,
+    'New Hosts': new_hosts_per_year.reindex(year_range, fill_value=0),
+    'Total IDs': id_per_year
+})
+
+# 创建一行两列的子图
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))  # 1行2列
+
+# --- 第一个子图：每个分组的数量和百分比 ---
+
+ax1.set_title('Number of Hosts by Listings Count Range')
+ax1.set_xlabel('Listings Count Range')
+ax1.set_ylabel('Number of Hosts')
+
+range_counts.plot(kind='bar', color='lightblue', ax=ax1)
+ax1.set_xticklabels(range_counts.index, rotation=45)
+
+# 添加百分比标签
+for i, (count, pct) in enumerate(zip(range_counts, percentages)):
+    ax1.text(i, count + 0.5, f'{pct:.1f}%', ha='center', va='bottom', fontsize=10)
+
+# --- 第二个子图：新增和累计 host 数量 ---
+# 新增 hosts 柱状图
+ax2.bar(result_df['Year'], result_df['New Hosts'], color='blue', label='New Hosts per Year')
+ax2.set_xlabel('Year')
+ax2.set_ylabel('New Hosts', color='blue')
+ax2.tick_params(axis='y', labelcolor='blue')
+
+# 累计 hosts 折线图
+ax3 = ax2.twinx()  # 共享 x 轴的第二个 y 轴
+ax3.plot(result_df['Year'], result_df['Total IDs'], color='orange', marker='o', label='Total Listings')
+ax3.set_ylabel('Total Listings', color='orange')
+ax3.tick_params(axis='y', labelcolor='orange')
+
+# 添加图例
+ax2.legend(loc='upper left')
+ax3.legend(loc='upper right')
+
+# --- 调整布局 ---
+plt.tight_layout()
+plt.show()
+```
+
+### 6.3 Analysis of property types
+
+```{python}
+#london['point_count'].sort_values()
+#london.sort_values(by='point_count', ascending=True).head(50)
+# london
+
+# gdf.host_listings_count.sort_values()
+
+gdf.info()
+gdf.iloc[:,0:13]
+# gdf.iloc[:,17:31]
+```
+
+```{python}
+# unique = gdf.drop_duplicates(subset='host_id')
+# unique.iloc[:,5:13]
+
+# gdf[gdf['host_name'] == 'Blueground'].iloc[:,5:13]
+
+# gdf[gdf['host_id'] == 314162972].iloc[:,5:13]
+gdf[gdf['host_id'] == 439074505].iloc[:,5:13]
+```
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as mpatches
+
+# 创建主图框架，使用 subplot2grid
+fig = plt.figure(figsize=(16, 8))  # 设置整个图的大小
+
+# --- 第一个子图: 房源类型分布地图 ---
+ax1 = plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)  # 跨4行2列，显示在左侧
+
+# 绘制背景地图
+london.plot(ax=ax1, color='whitesmoke', edgecolor='black')
+
+# 获取每个 room_type 的数量
+room_counts = gdf['room_type'].value_counts()
+total_count = len(gdf)  # 总房源数
+# 获取唯一的 room_type 和颜色
+room_types = gdf['room_type'].unique()
+colors = plt.colormaps['viridis'](np.linspace(0, 1, len(room_types)))  # 生成颜色列表
+# 绘制每个 room_type
+for i, room_type in enumerate(room_types):
+    subset = gdf[gdf['room_type'] == room_type]
+    count = len(subset)
+    percentage = (count / total_count) * 100  # 计算百分比
+    subset.plot(ax=ax1, color=colors[i], marker='o', markersize=0.3, 
+                label=f"{room_type} ({count}: {percentage:.1f}%)")  # 添加百分比
+
+ax1.set_title('Airbnb Houses Categorized by Room Type', fontsize=15)
+ax1.set_xlabel('Longitude')
+ax1.set_ylabel('Latitude')
+ax1.legend(title='Room Type', fontsize=10)
+
+# --- 第二个子图: 按 property_type 绘制柱状图 ---
+ax2 = plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)  # 跨4行2列，显示在右侧
+
+# 统计每种 property_type 的数量
+property_counts = gdf['property_type'].value_counts()
+
+# 筛选出数量超过 200 的类别
+filtered_counts = property_counts[property_counts > 200]
+
+# 绘制柱状图
+filtered_counts.plot(kind='bar', color='skyblue', ax=ax2)
+
+# 添加标题和标签
+ax2.set_title('Number of Listings by Property Type (Count > 200)', fontsize=15)
+ax2.set_xlabel('Property Type')
+ax2.set_ylabel('Count')
+
+# 旋转横轴标签，防止重叠
+ax2.set_xticklabels(filtered_counts.index, rotation=45, ha='right')
+
+# 调整布局并显示图表
+plt.tight_layout()
+plt.show()
+```
+
+* The high proportion of entire home listings indicates that Airbnb in London is becoming increasingly commercialized, with many properties likely dedicated specifically for rental purposes rather than occasional letting of spare space by hosts.
+
+* As a major tourist destination, visitors to London tend to prefer entire homes to enjoy greater comfort and privacy, especially families or groups of travelers.
+
+* The significant proportion of private rooms suggests that the Airbnb platform continues to cater to guests with different budgets and needs, particularly solo travelers or those who prefer interaction with hosts.
+
+* The low numbers of shared rooms and hotel rooms may be related to local regulations and Airbnb's market positioning. For example, hotels may face regulatory restrictions, while shared rooms are less popular due to privacy concerns.
+
+```{python}
+# 创建并列的子图
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))  # 1行2列的子图
+
+# 设置分箱：从 0 到 1000 每 25 一个分箱
+bins = list(range(0, 1125, 25))
+
+# 将超过 1000 的价格限制在 1000
+price_clipped = np.where(gdf['price'] > 1000, 1000, gdf['price'])
+
+# 计算直方图数据
+counts, bin_edges, _ = axes[0].hist(price_clipped, bins=bins, color='skyblue', edgecolor='black')
+
+# 设置标题和标签
+axes[0].set_title('Distribution of Price (≤1000 per night, 1000+)', fontsize=15)
+axes[0].set_xlabel('Price')
+axes[0].set_ylabel('Count')
+
+# 自定义 x 轴标签，每 100 显示一次，最后一个显示 1000+
+x_labels = [str(i) for i in range(0, 1000, 100)] + ['1000+']
+axes[0].set_xticks(range(0, 1100, 100))
+axes[0].set_xticklabels(x_labels)
+
+# 添加右侧 y 轴显示百分比
+ax_right = axes[0].twinx()  # 创建双轴
+ax_right.set_ylabel('Percentage')
+
+# 计算百分比并设置右侧 y 轴刻度
+total_counts = sum(counts)
+percentages = (counts / total_counts) * 100
+ax_right.set_ylim(0, max(percentages))  # 设置与左侧 y 轴对齐的百分比范围
+ax_right.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
+
+
+# 将超过 35 天的值设置为 35 天
+gdf['minimum_nights_clipped'] = np.where(gdf['minimum_nights'] > 35, 35, gdf['minimum_nights'])
+bins = list(range(1, 37))  # 1 到 35 每天一个 bin，35+ 合并为一格
+
+# 绘制 minimum_nights 列的直方图
+axes[1].hist(gdf['minimum_nights_clipped'], bins=bins, color='lightblue', edgecolor='black')
+
+# 添加阈值线 (在 30 天位置)
+axes[1].axvline(x=30, color='black', linestyle='--', linewidth=1.5, label='STR Threshold (30 days)')
+
+# 计算 30 天阈值之前的比例
+threshold = 30
+below_threshold = gdf[gdf['minimum_nights'] <= threshold].shape[0]  # 30天内的数量
+total_entries = gdf.shape[0]  # 总数量
+percentage_below = (below_threshold / total_entries) * 100
+
+# 在图上显示百分比信息
+axes[1].text(18, axes[1].get_ylim()[1] * 0.8,  # 设置位置
+             f'{below_threshold} listings ({percentage_below:.1f}%) below 30 nights',
+             fontsize=12, color='black', ha='center', bbox=dict(facecolor='white', alpha=0.6))
+
+# 设置标题和标签
+axes[1].set_title('Distribution of Minimum Nights', fontsize=15)
+axes[1].set_xlabel('Minimum Nights')
+axes[1].set_ylabel('Count')
+axes[1].legend()
+
+# 设置 x 轴刻度和标签
+x_ticks = list(range(1, 8)) + list(range(10, 36, 5))  # 前7天每天显示, 10到35天每5天显示
+x_labels = [str(i) for i in x_ticks[:-1]] + ['35+']  # 定义刻度标签
+axes[1].set_xticks(x_ticks)
+axes[1].set_xticklabels(x_labels)
+
+# 显示图形
+plt.tight_layout()
+plt.show()
+```
+
+
+[@dignazio:2020], [@HofmannTess2020AiNY] 测试一下
+[@McDonoughAnnie2019NYCf]
+[@SeilerMichaelJ.2024AonA]
+
+> ...
+
+## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London? 
+
+::: {.duedate}
+
+( 45 points; Answer due {{< var assess.group-date >}} )
+
+:::
+
+## K-means 
+
+### Calculate the density of tourist attractions in each LSOA in London
+
+```{python}
+!pip install --upgrade osmnx
+```
+
+```{python}
+import osmnx as ox
+print(ox.__version__)  # Should be 1.2.2 or newer
+```
+
+```{python}
+import geopandas as gpd
+import osmnx as ox
+import pandas as pd
+
+#  Load London LSOA boundary data
+lsoa_boundaries = gpd.read_file("data/London/LSOA_2011_London_gen_MHW.shp")
+
+# Retrieve tourist attraction data for London
+# Use OSMnx to extract nodes tagged as `tourism=attraction`
+tourist_attractions = ox.features_from_place(
+    "London, England", tags={"tourism": "attraction"}
+)
+
+# Ensure the coordinate reference system (CRS) is consistent
+tourist_attractions = tourist_attractions.to_crs(lsoa_boundaries.crs)
+
+# : Count the number of tourist attractions within each LSOA
+lsoa_boundaries["tourist_attraction_count"] = lsoa_boundaries.apply(
+    lambda row: tourist_attractions.within(row.geometry).sum(), axis=1
+)
+
+#  Calculate the density of tourist attractions (per square kilometer)
+# Transform to an equal-area projection to compute accurate area
+lsoa_boundaries = lsoa_boundaries.to_crs({"proj": "cea"})
+lsoa_boundaries["area_km2"] = lsoa_boundaries.geometry.area / 1e6  # Convert to square kilometers
+
+# Tourist attraction density = count / area
+lsoa_boundaries["tourist_attraction_density"] = (
+    lsoa_boundaries["tourist_attraction_count"] / lsoa_boundaries["area_km2"]
+)
+
+#  Export results to a CSV file
+# Use 'LSOA11CD' as the LSOA code column
+output_path = "data/london_lsoa_tourist_density.csv"
+output_csv = lsoa_boundaries[["LSOA11CD", "tourist_attraction_count", "tourist_attraction_density"]]
+output_csv.to_csv(output_path, index=False)
+
+print(f"Tourist attraction density has been saved to {output_path}")
+```
+
+ ### Calculating hotel density for each LSOA 
+
+```{python}
+import osmnx as ox
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# 1. Load LSOA boundary data
+lsoa_shp_path = "data/London/LSOA_2011_London_gen_MHW.shp"
+lsoa_data = gpd.read_file(lsoa_shp_path)
+
+# (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
+lsoa_data['area_km2'] = lsoa_data['geometry'].area / 10**6
+
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# 2. Get the London boundary 
+london_boundary = lsoa_data.dissolve().geometry.iloc[0]
+
+# 3. Fetch hotel data from OpenStreetMap
+hotels = ox.features_from_polygon(london_boundary, tags={"tourism": "hotel"}) 
+
+# Convert the hotel data into a GeoDataFrame and retain only geometry
+hotels_gdf = gpd.GeoDataFrame(hotels[['geometry', 'name']].dropna(subset=['geometry']), crs="EPSG:4326")
+
+# 4. Spatially join hotels to their respective LSOA units
+hotels_in_lsoa = gpd.sjoin(hotels_gdf, lsoa_data, how="inner", predicate="within")
+
+# Count the number of hotels per LSOA
+hotel_counts = hotels_in_lsoa.groupby('LSOA11CD').size().reset_index(name='hotel_count')
+
+# 5. Calculate hotel density (number of hotels per square kilometer)
+lsoa_data = lsoa_data.merge(hotel_counts, on='LSOA11CD', how='left')
+lsoa_data['hotel_count'] = lsoa_data['hotel_count'].fillna(0)
+lsoa_data['hotel_density'] = lsoa_data['hotel_count'] / lsoa_data['area_km2']
+
+# 6. Save results to a CSV file
+output_csv_path = "data/lsoa_hotel_density.csv"
+lsoa_data[['LSOA11CD', 'hotel_count', 'area_km2', 'hotel_density']].to_csv(output_csv_path, index=False)
+
+print(f"Hotel density data saved to {output_csv_path}")
+```
+
+### Calculating five-year house price changes
+
+```{python}
+import pandas as pd
+
+file_path_xlsx = "data/LSOA_Median_properties_price.xlsx"
+
+# Load the data
+data_xlsx = pd.read_excel(file_path_xlsx, engine='openpyxl')
+
+# List of all London boroughs including the City of London
+london_boroughs = [
+    "City of London", "Barking and Dagenham", "Barnet", "Bexley", "Brent", "Bromley", "Camden",
+    "Croydon", "Ealing", "Enfield", "Greenwich", "Hackney", "Hammersmith and Fulham", "Haringey",
+    "Harrow", "Havering", "Hillingdon", "Hounslow", "Islington", "Kensington and Chelsea",
+    "Kingston upon Thames", "Lambeth", "Lewisham", "Merton", "Newham", "Redbridge",
+    "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", "Waltham Forest", "Wandsworth", "Westminster"
+]
+
+# Filter the data for London based on the local authority name
+london_data = data_xlsx[data_xlsx['Local authority name'].isin(london_boroughs)]
+
+# Save the filtered data to a CSV file
+output_csv_path = "data/London_Housing_Data.csv"
+london_data.to_csv(output_csv_path, index=False)
+
+print(f"Filtered London data has been saved to {output_csv_path}")
+```
+
+```{python}
+import pandas as pd
+
+# Load the data
+data = pd.read_csv('data/London_Housing_Data.csv')
+
+# Strip any leading/trailing spaces in the column names
+data.columns = data.columns.str.strip()
+
+# Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
+data['Year ending Mar 2023'] = pd.to_numeric(data['Year ending Mar 2023'], errors='coerce')
+data['Year ending Dec 2018'] = pd.to_numeric(data['Year ending Dec 2018'], errors='coerce')
+
+# Check for missing values in the year columns after conversion
+missing_values = data[['Year ending Mar 2023', 'Year ending Dec 2018']].isnull().sum()
+print(f"Missing values in Year columns:\n{missing_values}")
+
+# Create a copy of the data to avoid SettingWithCopyWarning
+data_clean = data.copy()
+
+# Drop rows with missing values for price calculations (only for the year columns)
+data_clean = data_clean.dropna(subset=['Year ending Mar 2023', 'Year ending Dec 2018'])
+
+# Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
+# Use .loc to avoid SettingWithCopyWarning
+data_clean.loc[:, 'Price_Change'] = ((data_clean['Year ending Mar 2023'] - data_clean['Year ending Dec 2018']) / data_clean['Year ending Dec 2018'] * 100)
+
+# Merge the price change back with the original data (using LSOA_code as the key)
+data_with_change = pd.merge(data, data_clean[['LSOA code', 'Price_Change']], on='LSOA code', how='left')
+
+# Ensure data is sorted by LSOA code
+data_with_change_sorted = data_with_change.sort_values(by=['LSOA code'])
+
+# Save the result to a new CSV file
+data_with_change_sorted[['LSOA code', 'Price_Change']].to_csv('data/LSOA_London_houseprice_change.csv', index=False)
+
+print("House price change data saved to 'LSOA_London_houseprice_change.csv'")
+```
+
+```{python}
+# Define paths for the input Excel files and output CSV files
+input_file_imd = "data/LSOA_IMD_london.xlsx"
+output_file_imd = "data/LSOA_IMD_london.csv"
+
+input_file_population = "data/LSOA_population_density.xlsx"
+output_file_population = "data/LSOA_population_density.csv"
+
+# Function to convert an Excel file to a CSV file
+def convert_excel_to_csv(input_path, output_path):
+    # Read the Excel file
+    data = pd.read_excel(input_path)
+    # Save the data to a CSV file
+    data.to_csv(output_path, index=False)
+    print(f"Converted {input_path} to {output_path}")
+
+# Convert LSOA_IMD_london.xlsx to LSOA_IMD_london.csv
+convert_excel_to_csv(input_file_imd, output_file_imd)
+
+# Convert LSOA_population_density.xlsx to LSOA_population_density.csv
+convert_excel_to_csv(input_file_population, output_file_population)
+```
+
+### Read and process Airbnb data
+
+```{python}
+# read in Airbnb data
+airbnb_data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# Filter out only the columns we need
+columns_to_keep = ['id', 'property_type', 'room_type', 'price', 'review_scores_rating', 'review_scores_value', 'longitude', 'latitude']
+airbnb_filtered = airbnb_data[columns_to_keep].copy() 
+
+airbnb_filtered.loc[:, 'geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Create a GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_filtered, geometry='geometry', crs="EPSG:4326")  # Ensure CRS is WGS84
+
+airbnb_filtered.to_csv('data/filtered_airbnb_data.csv', index=False)
+
+airbnb_gdf.to_file('data/filtered_airbnb_data.geojson', driver='GeoJSON')
+
+# Print the cleaned data
+print(airbnb_gdf.head())
+```
+
+### Calculating Airbnb Density and Average Price per Night for LSOA Units
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# Load the LSOA boundary data
+lsoa_shp_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_data = gpd.read_file(lsoa_shp_path)
+
+# Use the projected coordinate system to calculate the area (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
+lsoa_data['area_km2'] = lsoa_data.geometry.area / 10**6  # Convert area from square meters to square kilometers
+
+# Reproject back to WGS84 for subsequent spatial operations
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# Load the Airbnb data with latitude and longitude
+airbnb_df = pd.read_csv('data/filtered_airbnb_data.csv')
+
+# Ensure the Airbnb data has latitude and longitude columns and create geometries
+airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Convert DataFrame to GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
+
+# Spatial join to get the Airbnb points within each LSOA
+airbnb_in_lsoa = gpd.sjoin(airbnb_gdf, lsoa_data, how="inner", predicate="within")
+
+# Clean the price column
+airbnb_in_lsoa['price'] = airbnb_in_lsoa['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
+
+# Calculate the average price for each LSOA
+average_price = airbnb_in_lsoa.groupby('LSOA11CD')['price'].mean().reset_index()
+average_price.rename(columns={'price': 'average_price'}, inplace=True)
+
+# Calculate the number of Airbnb listings in each LSOA
+airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD')['price'].count().reset_index(name='airbnb_count')
+
+# Merge average price and Airbnb count with LSOA data
+lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
+lsoa_data = lsoa_data.merge(airbnb_density, on='LSOA11CD', how='left')
+
+# Calculate Airbnb density (number of listings per square kilometer)
+lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
+
+# Display the result
+print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_count', 'airbnb_density']].head())
+```
+
+### Merge all data
+
+```{python}
+# 查看每个数据集的列名
+print(airbnb_df.columns)
+print(houseprice_df.columns)
+print(pop_density_df.columns)
+print(imd_df.columns)
+print(hotel_density_df.columns)
+print(tourist_density_df.columns)
+print(avptai_df.columns)
+```
+
+```{python}
+# Load all the datasets
+airbnb_df = pd.read_csv('data/LSOA_airbnb_summary.csv')
+houseprice_df = pd.read_csv('data/LSOA_London_houseprice_change.csv')
+pop_density_df = pd.read_csv('data/LSOA_population_density.csv')
+imd_df = pd.read_csv('data/LSOA_IMD_london.csv')
+hotel_density_df = pd.read_csv('data/lsoa_hotel_density.csv')
+tourist_density_df = pd.read_csv('data/london_lsoa_tourist_density.csv')
+avptai_df = pd.read_csv('data/LSOA_AvPTAI.csv')
+
+#  Merge the datasets based on the correct columns
+merged_data = airbnb_df.merge(houseprice_df, left_on='LSOA11CD', right_on='LSOA code', how='left')
+merged_data = merged_data.merge(pop_density_df, left_on='LSOA11CD', right_on='LSOA Code', how='left')
+merged_data = merged_data.merge(imd_df, left_on='LSOA11CD', right_on='LSOA code (2011)', how='left')
+merged_data = merged_data.merge(hotel_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(tourist_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(avptai_df, left_on='LSOA11CD', right_on='LSOA2011', how='left')
+
+# Select only the relevant columns
+final_data = merged_data[['LSOA11CD', 'average_price', 'airbnb_density', 'Price_Change', 
+                          'People per Sq Km', 'Income Score (rate)', 'hotel_density', 
+                          'tourist_attraction_density', 'AvPTAI2015']]
+
+# Check the first few rows of the final data
+print(final_data.head())
+
+# Optionally, save the final merged data to a CSV file
+final_data.to_csv('data/final_LSOA_data.csv', index=False)
+```
+
+### Check and clean the data  
+
+```{python}
+# Step 1: Check the column names for consistency
+print(final_data.columns)
+
+# Step 2: Strip any leading/trailing spaces from column names
+final_data.columns = final_data.columns.str.strip()
+
+# Step 3: Check for missing values
+print(final_data.isnull().sum())
+
+# Step 4: Fill missing values for numerical columns using the median, using `.loc` to avoid SettingWithCopyWarning
+numerical_columns = ['average_price', 'airbnb_density', 'Price_Change', 'People per Sq Km', 
+                     'Income Score (rate)', 'hotel_density', 'tourist_attraction_density', 'AvPTAI2015']
+
+for col in numerical_columns:
+    if col in final_data.columns:
+        final_data.loc[:, col] = final_data[col].fillna(final_data[col].median())
+
+# Step 5: Check if any missing values remain
+print(final_data.isnull().sum())
+```
+
+###  Standardization (Z-score scaling) 
+ - To scale data to have a mean of 0 and a standard deviation of 1.
+
+```{python}
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+
+# Print the column names
+print(final_data.columns)
+
+# Dynamically create numerical_columns
+numerical_columns = [col for col in ['average_price', 'airbnb_density', 'price_change', 
+                     'people per sq km', 'income score (rate)', 
+                     'hotel_density', 'tourist_attraction_density', 'avptai2015'] if col in final_data.columns]
+
+print("Columns to be standardized:", numerical_columns)
+
+# Initialize StandardScaler
+scaler = StandardScaler()
+
+# Safely apply standardization using .loc
+final_data.loc[:, numerical_columns] = scaler.fit_transform(final_data[numerical_columns])
+
+# Check the result
+print(final_data.head())
+```
+
+#### Elbow Method and Silhouette Coefficient
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+# Create an explicit copy of the dataframe
+final_data = final_data.copy()
+
+# Select relevant columns (excluding 'lsoa11cd' for clustering)
+clustering_data = final_data.drop(columns=['LSOA11CD'])
+
+# Standardize the data (Z-score scaling)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(clustering_data)
+
+# Elbow Method and Silhouette Score in one figure
+plt.figure(figsize=(12, 5))
+
+# Elbow Method subplot
+plt.subplot(1, 2, 1)
+inertia = []
+K_range = range(1, 11)
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    inertia.append(kmeans.inertia_)
+
+plt.plot(K_range, inertia, marker='o')
+plt.title("Elbow Method for Optimal K")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Inertia")
+plt.grid(True)
+
+# Silhouette Coefficient subplot
+plt.subplot(1, 2, 2)
+silhouette_scores = []
+K_range = range(2, 11)
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    score = silhouette_score(X_scaled, kmeans.labels_)
+    silhouette_scores.append(score)
+
+plt.plot(K_range, silhouette_scores, marker='o', color='blue')
+plt.title("Silhouette Scores for Optimal K")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Silhouette Score")
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+# Choose optimal K based on the plots (e.g., 3)
+optimal_k = 3
+
+# Perform KMeans clustering
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+cluster_labels = kmeans.fit_predict(X_scaled)
+final_data['Cluster'] = cluster_labels
+
+# Cluster Characteristics
+# 仅对数值列进行均值计算
+numeric_columns = final_data.select_dtypes(include=[np.number]).columns.tolist()
+numeric_columns = [col for col in numeric_columns if col != 'Cluster']
+
+cluster_means = final_data.groupby('Cluster')[numeric_columns].mean()
+print("Cluster Means:")
+print(cluster_means)
+
+# Count of instances in each cluster
+cluster_counts = final_data['Cluster'].value_counts()
+print("\nCluster Sizes:")
+print(cluster_counts)
+```
+
+### KMeans clustering
+
+```{python}
+from sklearn.cluster import KMeans
+
+# Determine the optimal number of clusters based on the plots
+optimal_k = 4
+
+# Perform K-Means clustering with the optimal number of clusters
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)
+
+# Display clustering results (first few rows)
+print("Clustering results:")
+print(final_data[['LSOA11CD', 'Cluster']].head())
+
+# Analyze the mean characteristics of each cluster (numerical features only)
+numerical_columns = [col for col in final_data.columns if col != 'LSOA11CD' and col != 'Cluster']
+cluster_summary = final_data.groupby('Cluster')[numerical_columns].mean()
+print("\nCluster summary (mean values of features):")
+print(cluster_summary)
+
+# Count the number of neighborhoods in each cluster
+cluster_counts = final_data['Cluster'].value_counts()
+print("\nNumber of neighborhoods in each cluster:")
+print(cluster_counts)
+
+# Save the clustering results to a CSV file
+final_data.to_csv('data/london_airbnb_clustering_results.csv', index=False)
+print("\nClustering results have been saved to 'london_airbnb_clustering_results.csv'.")
+```
+
+### Plot K-Means Clustering Result
+
+```{python}
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+from matplotlib.patches import Patch
+from matplotlib.legend_handler import HandlerPatch
+
+# Load LSOA shapefile
+shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_gdf = gpd.read_file(shapefile_path)
+
+# Load clustering results
+clustering_results = pd.read_csv('data/london_airbnb_clustering_results.csv')
+clustering_results.rename(columns={'lsoa11cd': 'LSOA11CD'}, inplace=True)
+lsoa_gdf = lsoa_gdf.merge(clustering_results[['LSOA11CD', 'Cluster']], on='LSOA11CD', how='left')
+
+# Ensure the CRS matches
+lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
+
+# Create a map plot
+fig, ax = plt.subplots(figsize=(12, 12))
+
+# Define softer and more pastel cluster colors
+cluster_colors = {
+    0: '#F6A8B2',  # Soft pastel pink
+    1: '#FFE5B4',  # Soft pastel peach
+    2: '#C7CEEA',  # Soft pastel blue
+    3: '#E0BBE4'   # Soft pastel lavender
+}
+
+# Custom legend handler for PatchCollection
+class HandlerColoredPatch(HandlerPatch):
+    def create_artists(self, legend, orig_handle,
+                       xdescent, ydescent, width, height, fontsize, trans):
+        return [Patch(facecolor=orig_handle.get_facecolor(), edgecolor='gray', linewidth=0.3)]
+
+# Plot LSOA regions colored by cluster
+for cluster, color in cluster_colors.items():
+    lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(
+        ax=ax, color=color, edgecolor='gray', linewidth=0.3, label=f'Cluster {cluster}'
+    )
+
+# Layout and legend styling
+ax.set_title("K-Means Clustering Results by LSOA", fontsize=16, fontweight='light')
+ax.set_xlabel("Longitude", fontsize=12)
+ax.set_ylabel("Latitude", fontsize=12)
+
+# Adjust the legend to handle custom colors
+legend_labels = [Patch(facecolor=color, edgecolor='gray', label=f'Cluster {cluster}') for cluster, color in cluster_colors.items()]
+ax.legend(handles=legend_labels, title="Clusters", loc='upper right', fontsize=12)
+
+# Remove axis for a cleaner map
+ax.set_axis_off()
+
+# Display the map
+plt.tight_layout()
+plt.show()
+```
+
+
+## Sustainable Authorship Tools
+
+Using the Terminal in Docker, you compile the Quarto report using `quarto render <group_submission_file>.qmd`.
+
+Your QMD file should automatically download your BibTeX and CLS files and any other required files. If this is done right after library loading then the entire report should output successfully.
+
+Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) (<span style="font-family:Sans-Serif;">sansfont</span>) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`). 
+
+## References
+
+

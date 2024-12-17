@@ -589,7 +589,6 @@ ax.set_xticklabels(x_labels)
 # Display the plot
 plt.tight_layout()
 plt.show()
-
 ```
 
 ```{python}

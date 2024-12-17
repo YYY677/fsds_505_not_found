@@ -691,7 +691,6 @@ plt.tight_layout()
 plt.show()
 ```
 
-
 [@dignazio:2020], [@HofmannTess2020AiNY] 测试一下
 [@McDonoughAnnie2019NYCf]
 [@SeilerMichaelJ.2024AonA]
@@ -1243,7 +1242,6 @@ plt.tight_layout()
 plt.show()
 ```
 
-
 ## Sustainable Authorship Tools
 
 Using the Terminal in Docker, you compile the Quarto report using `quarto render <group_submission_file>.qmd`.
@@ -1253,5 +1251,6 @@ Your QMD file should automatically download your BibTeX and CLS files and any ot
 Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) (<span style="font-family:Sans-Serif;">sansfont</span>) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`). 
 
 ## References
+
 
 

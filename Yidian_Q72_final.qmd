@@ -1,0 +1,247 @@
+---
+jupyter:
+  jupytext:
+    formats: 'ipynb,Rmd,qmd'
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.4
+  kernelspec:
+    display_name: Python (base)
+    language: python
+    name: base
+title: 7.1 The Correlation between Airbnb Rental Prices and Housing Prices
+---
+
+This part aims to explore the **spatial correlation** between **Airbnb rental prices** and **housing prices** across various wards in London. Wards are considered as the smallest unit of analysis for this research. Initially, K-means clustering is employed to categorize properties based on their rental prices. Subsequently, average Airbnb rental prices and average housing prices for each ward are calculated.
+
+
+```{python}
+#| output: false
+
+import pandas as pd
+import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from shapely.geometry import Point
+from sklearn.cluster import DBSCAN
+from esda import Moran
+from libpysal import weights
+```
+
+```{python}
+#| output: false
+
+# read the latest airbnb listings dataset
+df22 = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
+
+```{python}
+#| output: false
+
+# Create geometry column
+df22['geometry'] = df22.apply(lambda x: Point(x['longitude'], x['latitude']), axis=1)
+
+# Convert to GeoDataFrame
+df22_gdf = gpd.GeoDataFrame(df22, geometry='geometry')
+```
+
+```{python}
+#| output: false
+
+# Import geographical data of London communities
+london_areaer = gpd.read_file('data/London/London_Ward.shp')
+```
+
+```{python}
+#| output: false
+
+# Perform spatial join
+df22_gdf = df22_gdf.set_crs(epsg=4326) 
+london_areaer = london_areaer.to_crs(epsg=4326) 
+```
+
+```{python}
+#| output: false
+
+# Clean 'price' column by removing '$' and ',' and converting to float
+df22_gdf['price'] = df22_gdf['price'].replace({'\$': '', ',': '', '-': None}, regex=True)
+
+# Convert price column to float
+df22_gdf['price'] = pd.to_numeric(df22_gdf['price'], errors='coerce')
+
+# Print unique values after cleaning for checking
+print(df22_gdf['price'].unique())
+
+# Check the number of NaN values in the cleaned 'price' column
+print(df22_gdf['price'].isnull().sum())
+
+# Remove rows containing NaN
+df22_gdf.dropna(subset=['price'], inplace=True)
+
+# Re-check the number of NaN values
+print(df22_gdf['price'].isnull().sum())
+```
+
+```{python}
+#| output: false
+
+# Extract price data and normalize
+price_data = df22_gdf[['price']]
+scaler = StandardScaler()
+scaled_price = scaler.fit_transform(price_data)
+
+# Set K-means clustering amount
+kmeans = KMeans(n_clusters=5, random_state=42)
+
+# Perform clustering
+df22_gdf['cluster'] = kmeans.fit_predict(scaled_price)
+```
+
+```{python}
+#| output: false
+
+# Perform spatial join to find the community for each listing
+df22_gdf = gpd.sjoin(df22_gdf, london_areaer, how='left', predicate='intersects')
+
+# Calculate average house price for each community
+rental_prices = df22_gdf.groupby('NAME')['price'].mean().reset_index(name='rental_price')
+```
+
+```{python}
+#| output: false
+london_areaer = london_areas.merge(rental_prices, left_on='NAME', right_on='NAME', how='left')
+```
+
+```{python}
+#| output: false
+
+# Check merged data
+print(london_areaer.head())  # Ensure 'average_price' column exists
+print(london_areaer.columns)  # Check all column names
+```
+
+```{python}
+#| output: false
+
+# Read house price data
+house_prices = pd.read_csv('data/land-registry-house-prices-ward.csv')
+# View the first few rows of the data
+print(house_prices.head())
+# Replace invalid values '-' with NaN
+house_prices['Value'] = house_prices['Value'].replace('-', np.nan)
+# Clean 'Value' column by removing commas and converting to float
+house_prices['Value'] = house_prices['Value'].str.replace(',', '').astype(float)
+# Handle potential NaN values in the file
+house_prices['Value'] = house_prices['Value'].fillna(0)  # Or use mean imputation or other methods
+```
+
+```{python}
+#| output: false
+
+# Import geographical data of London communities
+london_areas = gpd.read_file('data/London/London_Ward.shp')
+print(london_areas.head())
+```
+
+```{python}
+#| output: false
+
+# Assume house price data contains 'ward' and 'price' columns
+average_prices = house_prices.groupby('Ward_name')['Value'].mean().reset_index(name='average_price')
+# View the first few rows of average house price
+print(average_prices.head())
+```
+
+```{python}
+#| output: false
+
+# Merge data
+london_areas = london_areas.merge(average_prices, left_on='NAME', right_on='Ward_name', how='right')
+print(london_areas.columns)  # Check all column names
+print(london_areas.head())  # View the first few rows of merged data
+```
+
+```{python}
+#| output: false
+
+# Calculate the overall average house price
+average_overall_price = house_prices['Value'].mean()
+
+# Calculate relative prices
+london_areas['relative_price'] = london_areas['average_price'] / average_overall_price
+
+# Get the top ten relative_price values and their corresponding Ward names
+top_wards = london_areas.nlargest(10, 'relative_price')[['NAME', 'relative_price']]
+
+# Print results
+print(top_wards)
+```
+
+```{python}
+fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+
+# 绘制 1
+london_areaer.plot(column='rental_price', cmap='Blues', ax=axes[0])
+london_areaer.boundary.plot(ax=axes[0], color='black', linewidth=0.2)
+axes[0].set_title("Average Airbnb Rental Prices in London")
+axes[0].set_xlabel("Longitude")
+axes[0].set_ylabel("Latitude")
+
+# 绘制 2
+london_areas.plot(column='relative_price', cmap='Blues',ax=axes[1])
+london_areas.boundary.plot(ax=axes[1], color='black', linewidth=0.2)
+
+axes[1].set_title("Relative Average House Prices in London")
+axes[1].set_xlabel("Longitude")
+axes[1].set_ylabel("Latitude")
+plt.legend()
+plt.tight_layout()  # 自动调整子图间距
+plt.show()
+```
+
+```{python}
+# Plot the map
+fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+
+# Plot the Average Airbnb Rental Prices in London map
+london_areaer.plot(column='rental_price', cmap='viridis',  ax=axes[0])
+london_areaer.boundary.plot(ax=axes[0], color='black', linewidth=0.2)
+axes[0].set_title("Average Airbnb Rental Prices in London")
+axes[0].set_xlabel("Longitude")
+axes[0].set_ylabel("Latitude")
+
+# Retrieve color bar
+cbar1 = plt.colorbar(axes[0].collections[0], ax=axes[0], shrink=0.3)  # 调整 shrink 参数
+cbar.set_ticks([1, 2, 3, 4, 5])  
+cbar.set_ticklabels(['1', '2', '3', '4', '5'])  # 设置刻度标签
+
+# Plot the Relative Average House Prices in London ma
+london_areas.plot(column='relative_price', cmap='viridis',  ax=axes[1])
+london_areas.boundary.plot(ax=axes[1], color='black', linewidth=0.2)
+axes[1].set_title("Relative Average House Prices in London")
+axes[1].set_xlabel("Longitude")
+axes[1].set_ylabel("Latitude")
+
+# Retrieve color bar
+cbar1 = plt.colorbar(axes[1].collections[0], ax=axes[1], shrink=0.3)  # 调整 shrink 参数
+cbar.set_ticks([1, 2, 3, 4, 5])  
+cbar.set_ticklabels(['1', '2', '3', '4', '5'])  # 设置刻度标签
+
+
+plt.legend()
+plt.tight_layout()  # 自动调整子图间距
+plt.show()
+```
+
+By comparing these two metrics visually on a map, it is observed that the area with **the highest Airbnb rental prices is Bishop's**, which paradoxically reflects a **relatively low average housing price**. 
+
+Conversely, Knightsbridge and Belgravia, located in proximity to the city center, exhibit the highest average housing prices, with a **noticeable decline** as one moves outward from the central area.
+
+Importantly, the districts that report the highest Airbnb rental prices do not coincide with those that have the highest housing prices. 
+
+Nevertheless, **both** metrics are significantly concentrated around the ward of Knightsbridge and Belgravia. Furthermore, some suburban wards demonstrate relatively high Airbnb rental prices; however, the housing prices in these areas remain comparable to those of their neighboring regions, suggesting limited impact.
+

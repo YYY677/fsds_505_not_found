@@ -681,6 +681,7 @@ Airbnb_inital_Data.info()
 ```
 
 ```{python}
+#| output: false
 from shapely.geometry import Point
 
 # 创建民宿点的GeoDataFrame
@@ -763,6 +764,7 @@ Airbnb_final_data = Airbnb_data_wards_sorted [["WARD","GSS_CODE","price","review
 ```
 
 ```{python}
+#| output: false
 # Clean 'price' column and convert it to float
 Airbnb_final_data['price'] = Airbnb_final_data['price'].astype(str)
 Airbnb_final_data['price'] = Airbnb_final_data['price'].str.replace('$','', regex=False).str.replace(',','', regex=False).astype(float).fillna(-1)
@@ -1106,3 +1108,106 @@ results3, results4
 
 Prices and number of homes sold:
 In the same multi-collinearity processing, we found through model analysis that factors such as price, quantity, monthly number of reviews and review scores on Airbnb would affect the house price of ward in the UK to a degree of 63%, but for the annual house sales, there was little influence, and only 1.8% of the change was related to Airbnb.
+
+```{python}
+Airbnb_with_housedata = pd.merge(Airbnb_with_housedata, Airbnb_with_population, on="GSS_CODE", how="left")
+```
+
+```{python}
+Airbnb_with_alldata = Airbnb_with_housedata.drop(columns=["WARD_y","price_y","availability_365_y","reviews_per_month_y","review_scores_value_y","count_y","Year"])
+```
+
+```{python}
+Airbnb_with_alldata = Airbnb_with_alldata.drop(columns=["review_scores_rating"])
+```
+
+```{python}
+Airbnb_with_alldata.rename(columns={"WARD_x": "WARD"}, inplace=True)
+Airbnb_with_alldata.rename(columns={"price_x": "Airbnb_price"}, inplace=True)
+Airbnb_with_alldata.rename(columns={"availability_365_x": "Airbnb_availability_365"}, inplace=True)
+Airbnb_with_alldata.rename(columns={"reviews_per_month_x": "Reviews_per_month"}, inplace=True)
+Airbnb_with_alldata.rename(columns={"review_scores_value_x": "Review_scores_value"}, inplace=True)
+Airbnb_with_alldata.rename(columns={"count_x": "Airbnb_count"}, inplace=True)
+```
+
+```{python}
+Airbnb_with_alldata.to_csv('data/Airbnb_with_all_data.csv')
+```
+
+```{python}
+#Airbnb_with_alldata
+```
+
+```{python}
+#| output: false
+
+# Check the basic information of the data
+print(Airbnb_with_alldata.info())
+print(Airbnb_with_alldata.describe())
+```
+
+```{python}
+#| output: false
+
+# Filtering numeric columns
+numeric_columns = Airbnb_with_alldata.select_dtypes(include=['float64', 'int64']).columns
+
+# Exclude non-numeric columns
+numeric_data = Airbnb_with_alldata[numeric_columns]
+
+# 计算相关性矩阵
+correlation_matrix = numeric_data.corr()
+
+# 提取目标变量与自变量的相关性
+target_columns = ['Population_per_square_kilometre', 'Houseprice_median', 'Housesales_median']
+
+correlation_with_targets = correlation_matrix.loc[target_columns, ['Airbnb_price', 'Airbnb_availability_365', 'Reviews_per_month', 'Review_scores_value','Airbnb_count']]
+print(correlation_with_targets)
+```
+
+```{python}
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# 选择需要的自变量
+independent_vars = Airbnb_with_alldata[['Airbnb_price', 'Airbnb_availability_365', 'Reviews_per_month', 'Review_scores_value','Airbnb_count']]
+independent_vars.insert(0, 'Intercept', 1)  # 添加截距项
+
+# 计算每个自变量的 VIF
+vif_data = pd.DataFrame({
+    "Variable": independent_vars.columns,
+    "VIF": [variance_inflation_factor(independent_vars.values, i) for i in range(independent_vars.shape[1])]
+})
+print(vif_data)
+```
+
+```{python}
+import statsmodels.api as sm
+
+# 目标变量列表
+target_columns = ['Population_per_square_kilometre', 'Houseprice_median', 'Housesales_median']
+
+# 循环为每个目标变量构建回归模型
+for target in target_columns:
+    X = Airbnb_with_alldata[['Airbnb_price', 'Airbnb_availability_365', 'Reviews_per_month', 'Review_scores_value','Airbnb_count']]
+    y = Airbnb_with_alldata[target]
+    X = sm.add_constant(X)  # 添加截距项
+    model = sm.OLS(y, X).fit()
+    print(f"Regression results for {target}:")
+    print(model.summary())
+```
+
+```{python}
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 变量分布
+sns.pairplot(numeric_data[['Houseprice_median', 'Airbnb_price', 'Airbnb_availability_365', 'Reviews_per_month', 'Review_scores_value','Airbnb_count']])
+plt.show()
+
+# 回归残差分析
+sns.residplot(x=model.predict(X), y=model.resid)
+plt.xlabel('Fitted Values')
+plt.ylabel('Residuals')
+plt.show()
+```
+

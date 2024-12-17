@@ -187,10 +187,20 @@ Student Numbers: 24082251
                  24057655
                  24046535
                  
-# Research propose
+# Initial Research scope
 
-## Exploring the Impact Profile of on London Communities
-Research objectives: To assess the impact of Airbnb across different regions by geodemographic categorisation of different London neighbourhoods and to provide scientific evidence for policy makers to understand which neighbourhoods are affected by Airbnb short-term rentals (STL) and which are likely to face this impact in the future. Differentiated policy recommendations will be proposed to avoid one-size-fits-all regulation.
+## 1. Research Topic: 
+ Exploring the Impact Profile of London's Neighbourhoods 
+
+## 2. Methodology:
+1. Correlation between Airbnb Rental Prices and Housing Prices
+2. Multiple Linear Regression Analysis
+3. K-Means Geodemographic Classification
+
+## 3. Research objectives:
+1. Investigate the Impact of Airbnb on Housing Prices and Availability:
+2. Identify Affected Areas and Community Profiles
+3. Summarize Policy Recommendations
 
 # Response to Question
 
@@ -996,7 +1006,6 @@ print(vif_data)
 After calculating the VIF of the independent variables, we find that there are no variables that exceed the threshold, so there may be no obvious multicollinearity, and the model results are as follows:
 
 ```{python}
-
 import statsmodels.api as sm
 
 # List of target variables
@@ -1033,24 +1042,23 @@ The model fits well, including:
 - Reviews_per_month and Review_scores_value are significant in some models, but in different directions.
 - Airbnb_price is only significant in the Houseprice_median model.
 
-### 7.3 The Impact of Airbnb on London Neighborhoods: A K-Means Geodemographic Classification
+### 7.3 The Impact of Airbnb on London Neighborhoods: K-Means Geodemographic Classification
 
 #### 7.3.1 Data processing
 
- *key variables*
-  - Airbnb Average Price per Night: Reflects the economics of the short-term rental market.
-  - Airbnb Density: shows how well Airbnb's are distributed in a given neighborhood.
-  - Changes in Social Listing Prices Over a Five-Year Period: Indirectly reflects Airbnb's potential impact on the local real estate market.
-  - Population Density: Indicates the size and density of a community's population.
-  - Income Deprivation Index: Higher values indicate greater income deprivation, which may be
-  - correlate with the economic status and social vulnerability of the community
-  - Hotel Density: measures the competitive environment for traditional lodging establishments.
-  - Attraction Density: Reflects the community's tourist appeal and potential demand for Airbnb's.
-  - Public Transportation Accessibility: Demonstrates the community's accessibility to tourists.
+ *key variables:*    
+ - average_price: Average nightly price of Airbnb  
+ - airbnb_density  
+ - Price_Change: Five-year housing price change in the community  
+ - People per Sq Km: Population density  
+ - Income Score (rate): Income deprivation score  
+ - hotel_density  
+ -  tourist_attraction_density  
+ -  AvPTAI2015: Public Transport Accessibility Index   
 
 *Variables that need to be processed :*
 
-1. Calculate the density of tourist attractions in each LSOA in London
+ - Calculate the density of tourist attractions in each LSOA in London
 
 ```{python}
 #| output: false
@@ -1100,7 +1108,7 @@ output_csv.to_csv(output_path, index=False)
 print(f"Tourist attraction density has been saved to {output_path}")
 ```
 
- 2. Calculate hotel density for each LSOA unit
+ - Calculate hotel density for each LSOA unit
 
 ```{python}
 #| output: false
@@ -1143,7 +1151,7 @@ lsoa_data[['LSOA11CD', 'hotel_count', 'area_km2', 'hotel_density']].to_csv(outpu
 print(f"Hotel density data saved to {output_csv_path}")
 ```
 
- 3. Calculate five-year house price changes for each LSOA unit
+ - Calculate five-year house price changes for each LSOA unit
 
 ```{python}
 #| output: false
@@ -1234,7 +1242,7 @@ convert_excel_to_csv(input_file_imd, output_file_imd)
 convert_excel_to_csv(input_file_population, output_file_population)
 ```
 
- 4. Read in and process Airbnb data
+- Read in and process Airbnb data
 
 ```{python}
 #| output: false
@@ -1265,7 +1273,7 @@ airbnb_gdf.to_file('data/filtered_airbnb_data.geojson', driver='GeoJSON')
 print(airbnb_gdf.head())
 ```
 
- 5. Calculate Airbnb Density and Average Price per Night for LSOA Units
+ - Calculate Airbnb Density and Average Price per Night for LSOA Units
 
 ```{python}
 #| output: false
@@ -1315,7 +1323,7 @@ lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
 print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_count', 'airbnb_density']].head())
 ```
 
- 6. Merge all data
+ - Merge all data
 
 ```{python}
 #| output: false
@@ -1348,7 +1356,7 @@ print(final_data.head())
 final_data.to_csv('data/final_LSOA_data.csv', index=False)
 ```
 
- 7. Check and clean the data  
+ - Check and clean the data  
 
 ```{python}
 #| output: false
@@ -1442,7 +1450,7 @@ plt.grid(True)
 plt.show()
 ```
 
- - Based on the information provided in the graphs, the optimal number of clusters (K) appears to be 3.
+ - Based on the information provided in the graphs, the optimal number of clusters (K) appears to be 4.
 
 #### 7.3.4 K-means Clustering
 
@@ -1489,29 +1497,13 @@ print("\nClustering results have been saved to 'data/london_airbnb_clustering_re
 
 **Results of K-means clustering**
 
-1. Cluster 0: "Low Impact — Stable Residential Areas"
-- Lowest Airbnb Density (-0.42) and Hotel Density (-0.13) indicate minimal tourism and Airbnb presence.
-- Highest Price Change (19.39) reflects significant housing market growth, possibly driven by local development or gentrification.
-- Low Population Density (6,688 people/km²) and Poor Public Transport Access (7.98) make these areas less attractive to short-term rentals.
-- Moderate Income Deprivation (0.11) suggests economic vulnerability. 
+1. Cluster 0: "Low-Impact Peripheral Areas" ：Low Airbnb activity, poor transport access, rising housing prices, minimal tourism. 
 
-2. Cluster 1: "Moderate Impact — Balanced Zones"
-- Moderate Airbnb Density (0.44) and Hotel Density (-0.06) indicate balanced tourism and residential dynamics.
-- Moderate Price Change (10.75) and Population Density (16,761 people/km²) suggest a stable housing market with mixed use.
-- Moderate Public Transport Access (19.40) supports tourism without overwhelming local infrastructure.
-- Higher Income Deprivation (0.19) reflects economic challenges despite balanced Airbnb activity.
+2. Cluster 1: "Heavily Impacted Tourist Hubs": Extremely high Airbnb density, central locations, high hotel and tourist attraction density, excellent transport access.
 
-3. Cluster 2: "Emerging Impact — High Price Pressure Areas"
-- Unusually High Average Price (18.90) indicates significant economic pressures on the housing market.
-- Moderate Airbnb Density (0.48) and Tourist Attraction Density (0.19) reflect emerging tourism activity.
-- High Population Density (17,579 people/km²) combined with Good Public Transport Access (30.45) supports growth in short-term rentals.
-- Moderate Income Deprivation (0.16) suggests economic tension within these areas.
+3. Cluster 2: "At-Risk Transition Zones": Moderate Airbnb activity, rising housing prices, income deprivation, low tourism and hotel presence.
 
-4. Cluster 3:"High Impact — Tourist Hotspots"
-- Highest Airbnb Density (3.51) and Hotel Density (3.11) mark these areas as major tourism accommodation hubs.
-- Highest Average Price (0.54) suggests strong profitability for short-term rentals.
-- High Tourist Attraction Density (1.63) and Population Density (20,976 people/km²) highlight their appeal to visitors.
-- Convenient Public Transport Access (53.91) facilitates heavy visitor traffic.
+4. Cluster 3: "Emerging Impact Zones": Growing Airbnb density, rising housing prices, near-central areas, moderate tourism and transport access.
 
 #### 7.3.5 Plot K-Means Clustering Result
 
@@ -1583,30 +1575,32 @@ plt.show()
 ```
 
 - *From the map:*
-- Cluster 0 dominates the outer boroughs of London and peripheral areas.
-- Cluster 1, which is Small, isolated neighborhoods near central areas showing signs of Airbnb growth.
-- Cluster 2 is widely distributed across inner London and intermediate zones surrounding central areas.It forms a ring around the core city center, particularly dense in the inner boroughs like Hackney, Islington, and Camden.
-- Cluster 3, is concentrated in central London, including areas like Westminster, the City of London, and parts of Southwark.
-  
+- Cluster 1 - Concentrated in the central core of London, these are the high-impact tourist hubs. Such as, Southwark, Tower Hamlets and Camden.
+- Cluster 2 - Located between Cluster 1 and Cluster 0, these are the transitional at-risk zones.
+- Cluster 3 - Situated near the center, like Westminster, Kensington. These are the emerging impact zones on the periphery of the core.
+- Cluster 0 - Found in the outer peripheral areas, these are the low-impact neighborhoods.
 
 #### 7.3.6 Conclusion on Airbnb Impact and Policy Recommendations:
 
-1. Low Impact — Stable Residential Areas:
-  - Airbnb Impact:These neighborhoods are largely residential with minimal tourism influence but are at risk of future Airbnb expansion due to rising housing prices.
-  - Policy Recommendations: Proactively monitor Airbnb growth. Implement measures to prevent housing market disruption, such as rental density caps.
+1. Heavily Impacted Central Tourist Hubs:
+  - Airbnb Impact: Severe housing pressures, tourism-driven displacement, and rising rents. Airbnb dominates short-term rentals, reducing long-term housing availability.
+  - Policy Recommendations: Immediate regulation to control Airbnb density. Implement rental caps and enforce zoning restrictions. Protect affordable housing for local residents.
 
-2. Emerging Airbnb Areas — “Expansion Zones”:
-  - Airbnb Impact: These neighborhoods have a moderate Airbnb presence that coexists with local housing needs.
-  - Policy Recommendations: Encourage sustainable tourism while safeguarding affordable housing. Adopt policies that prevent excessive short-term rental concentration.
- 
+2. At-Risk Transition Zones:
+  - Airbnb Impact:Emerging Airbnb activity increases risks of gentrification, especially in deprived areas. Communities face housing affordability issues as prices rise.
+  - Policy Recommendations: Introduce early interventions to stabilize housing costs. Encourage long-term rentals over short-term stays.
 
-3. High Impact — Tourist Hotspots:
- - Airbnb Impact: These areas are already heavily impacted by Airbnb activity, creating pressure on housing availability and affordability.
- - Policy Recommendations: Introduce stricter regulations, such as rental caps, zoning restrictions, and taxation on short-term rentals to protect long-term residents.
+3. Emerging Impact Zones:
+ - Airbnb Impact: Rising Airbnb density puts growing pressure on housing availability and affordability. Areas are on the path to becoming heavily impacted.
+ - Policy Recommendations: Balance tourism opportunities with protecting housing for locals.
 
 4. Emerging Impact — High Price Pressure Areas:
-- Airbnb Impact: These neighborhoods are emerging hotspots, where Airbnb activity and housing pressures are growing.
-- Policy Recommendations: Implement early intervention strategies to balance tourism growth and housing stability. Monitor housing price trends closely.
+- Airbnb Impact: Airbnb activity is very low, with little effect on housing or rents. Poor public transport makes these areas less attractive to visitors.
+- Policy Recommendations: Focus on improving transport and infrastructure to support balanced development.
+
+### 8. Conclusion and Reflection
+
+This study explores Airbnb's impact on London's neighbourhoods.The analysis indicates that high Airbnb rental prices do not always correspond with high housing prices, with areas like Bishop's showing higher Airbnb rents despite lower housing costs. Multiple linear regression models reveal that Airbnb listings, reviews, and availability significantly influence housing prices and population density. K-means clustering categorizes areas into tourist hubs, at-risk zones, emerging areas, and low-impact zones. The study recommends regulating Airbnb density in high-impact areas, protecting affordable housing, and balancing tourism with long-term housing needs. Moreover, challenges related to accuracy, legality, and ethics must be acknowledged. Future research should combine more comprehensive data to enhance the result.
 
 ## Sustainable Authorship Tools
 

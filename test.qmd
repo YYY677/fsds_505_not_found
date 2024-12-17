@@ -568,29 +568,6 @@ Chaudhary had illustrated some drawbacks of short term renting [@chaudhary2021ef
 1. **Reduced long-term housing supply**: Due to higher profits from short-term rentals (e.g., Airbnb), many landlords prioritize short-term leases over long-term rentals, exacerbating London's housing crisis and driving up rents, especially for low- and middle-income residents.
 2. **Community impacts**: A high volume of short-term rentals can disrupt neighborhoods, increasing noise and tourist traffic, making communities less appealing for long-term residents and undermining stability and safety.
 
-## 
-
-## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London?
-
-### 7.3 The Impact of Airbnb on London Neighborhoods: A K-Means Geodemographic Classification
-
-- This analysis categorizes London neighborhoods into distinct groups based on how they have, or have not, been impacted by Airbnb. Using K-means clustering and relevant socio-economic and geographic indicators, we developed profiles to assist policymakers in understanding the diversity of environments where Airbnb operates. 
-
-#### 7.3.1 Data processing
-
-##### Variables that need to be processed :
-  - Airbnb Average Price per Night: Reflects the economics of the short-term rental market.
-  - Airbnb Density: shows how well Airbnb's are distributed in a given neighborhood.
-  - Changes in Social Listing Prices Over a Five-Year Period: Indirectly reflects Airbnb's potential impact on the local real estate market.
-  - Population Density: Indicates the size and density of a community's population.
-  - Income Deprivation Index: Higher values indicate greater income deprivation, which may be
-  - correlate with the economic status and social vulnerability of the community
-  - Hotel Density: measures the competitive environment for traditional lodging establishments.
-  - Attraction Density: Reflects the community's tourist appeal and potential demand for Airbnb's.
-  - Public Transportation Accessibility: Demonstrates the community's accessibility to tourists.
-
-  1. Calculate the density of tourist attractions in each LSOA in London
-
 ## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London?
 
 ### 7.3 The Impact of Airbnb on London Neighborhoods: A K-Means Geodemographic Classification
@@ -599,27 +576,6 @@ Chaudhary had illustrated some drawbacks of short term renting [@chaudhary2021ef
 
  *key variables*
   - Airbnb Average Price per Night: Reflects the economics of the short-term rental market.
-  - Airbnb Density: shows how well Airbnb's are distributed in a given neighborhood.
-  - Changes in Social Listing Prices Over a Five-Year Period: Indirectly reflects Airbnb's potential impact on the local real estate market.
-  - Population Density: Indicates the size and density of a community's population.
-  - Income Deprivation Index: Higher values indicate greater income deprivation, which may be
-  - correlate with the economic status and social vulnerability of the community
-  - Hotel Density: measures the competitive environment for traditional lodging establishments.
-  - Attraction Density: Reflects the community's tourist appeal and potential demand for Airbnb's.
-  - Public Transportation Accessibility: Demonstrates the community's accessibility to tourists.
-
-*Variables that need to be processed :*
-
-1. Calculate the density of tourist attractions in each LSOA in London
-
-## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London?
-
-### 7.3 The Impact of Airbnb on London Neighborhoods: A K-Means Geodemographic Classification
-
-#### 7.3.1 Data processing
-
-*key variables*
- - Airbnb Average Price per Night: Reflects the economics of the short-term rental market.
   - Airbnb Density: shows how well Airbnb's are distributed in a given neighborhood.
   - Changes in Social Listing Prices Over a Five-Year Period: Indirectly reflects Airbnb's potential impact on the local real estate market.
   - Population Density: Indicates the size and density of a community's population.

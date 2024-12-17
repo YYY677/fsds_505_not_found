@@ -943,59 +943,45 @@ final_data.loc[:, numerical_columns] = scaler.fit_transform(final_data[numerical
 print(final_data.head())
 ```
 
-#### 7.3.3 Elbow Method and Silhouette Coefficient
+#### 7.3.3 Elbow Method to caculate the k value
 
 ```{python}
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+import numpy as np
+import pandas as pd
 
-# Create an explicit copy of the dataframe
+# Set random seeds to ensure reproducibility
+random_state = 42
+np.random.seed(random_state)
+
+# Create a copy of the dataframe (ensure the data is stable and sorted)
 final_data = final_data.copy()
+final_data = final_data.sort_values(by=final_data.columns.tolist()).reset_index(drop=True)
 
-# Select relevant columns (excluding 'lsoa11cd' for clustering)
+# Select relevant columns (excluding 'LSOA11CD' for clustering)
 clustering_data = final_data.drop(columns=['LSOA11CD'])
 
 # Standardize the data (Z-score scaling)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(clustering_data)
 
-# Elbow Method and Silhouette Score in one figure
-plt.figure(figsize=(12, 5))
-
-# Elbow Method subplot
-plt.subplot(1, 2, 1)
+# Elbow Method for Optimal K
+plt.figure(figsize=(8, 5))
 inertia = []
 K_range = range(1, 11)
 for k in K_range:
-    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans = KMeans(n_clusters=k, random_state=random_state, n_init=10)  # Fix n_init
     kmeans.fit(X_scaled)
     inertia.append(kmeans.inertia_)
 
+# Plot Elbow Method
 plt.plot(K_range, inertia, marker='o')
 plt.title("Elbow Method for Optimal K")
 plt.xlabel("Number of Clusters (K)")
 plt.ylabel("Inertia")
 plt.grid(True)
-
-# Silhouette Coefficient subplot
-plt.subplot(1, 2, 2)
-silhouette_scores = []
-K_range = range(2, 11)
-for k in K_range:
-    kmeans = KMeans(n_clusters=k, random_state=42)
-    kmeans.fit(X_scaled)
-    score = silhouette_score(X_scaled, kmeans.labels_)
-    silhouette_scores.append(score)
-
-plt.plot(K_range, silhouette_scores, marker='o', color='blue')
-plt.title("Silhouette Scores for Optimal K")
-plt.xlabel("Number of Clusters (K)")
-plt.ylabel("Silhouette Score")
-plt.grid(True)
-
-plt.tight_layout()
 plt.show()
 ```
 
@@ -1059,12 +1045,12 @@ print("\nClustering results have been saved to 'london_airbnb_clustering_results
     - Limited Transport Access: Public transport is less accessible, reducing visitor convenience.
 
 - Cluster 3: Transitional Areas — “Moderate Impact Zones”
-  - Key Characteristics:
-    - Moderate Airbnb Density: Short-term rentals are steadily increasing, showing a moderate level of activity.
-    - High Population Density: These neighborhoods are densely populated, similar to central areas.
-    - Economic Inequality: Income deprivation is evident, with significant disparities across neighborhoods.
-    - Moderate Tourist Presence: Tourist attractions and hotels are present but not as dominant as in Cluster 0.
-    - Good Public Transport: Transport accessibility is above average, supporting both residents and visitors.
+ - Key Characteristics:
+  - Moderate Airbnb Density: Short-term rentals are steadily increasing, showing a moderate level of activity.
+  - High Population Density: These neighborhoods are densely populated, similar to central areas.
+  - Economic Inequality: Income deprivation is evident, with significant disparities across neighborhoods.
+  - Moderate Tourist Presence: Tourist attractions and hotels are present but not as dominant as in Cluster 0.
+  - Good Public Transport: Transport accessibility is above average, supporting both residents and visitors.
 
 #### 7.3.5 Plot K-Means Clustering Result
 

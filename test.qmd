@@ -204,35 +204,15 @@ See the raw file for examples of how to hide computational output as there is co
 
 ::: {.duedate}
 
-( 2 points; Answer due Week 7 )
-
-As a mission driven, grassroots project, Inside Airbnb relies on the generous support of collaborators who choose to contribute to the project.
-
-1. Murray Cox. Murray is a community artist and activist who uses data, media and technology for social change. He is the founder and current chief data activist of Inside Airbnb.
-2. John Morris. John, an artist and designer, was a founding collaborator who designed and re-designed the website, and is the creative producer of the project's major reports.
-3. Taylor Higgins. Taylor is working on her masters in Florence, Italy at the Scuola di Economia e Statistiche (School of Economics and Statistics) at the Università degli Studi di Firenze with a focus on designing sustainable tourism systems. Taylor is working to build and organise the data and activist communities of Inside Airbnb.
-
-
+Inside Airbnb data was collected by Murray Cox, a data activist and the project's founder, John Morris, the website designer and report producer, and Taylor Higgins, a master's student focusing on sustainable tourism at the Università degli Studi di Firenze.
 
 :::
-
-An inline citation example: As discussed on @insideairbnb, there are many...
-
-A parenthetical citation example: There are many ways to research Airbnb [see, for example, @insideairbnb]... 
-
 
 ## 2. Why did they collect the InsideAirbnb data?
 
 ::: {.duedate}
 
-( 4 points; Answer due Week 7 )
-
-Inside Airbnb is a mission driven project that provides data and advocacy about Airbnb's impact on residential communities.
-
-"We work towards a vision where communities are empowered with data and information to understand, decide and control the role of renting residential homes to tourists."
-
-
-
+The purpose of InsideAirbnb data is to provide data-driven insights into the impact of Airbnb on residential housing markets, thereby contributing to public discourse on the regulation and effects of short-term rental platforms in urban areas.
 
 :::
 
@@ -240,24 +220,23 @@ Inside Airbnb is a mission driven project that provides data and advocacy about 
 
 ::: {.duedate}
 
-( 5 points; Answer due Week 8 )
+The data is collected by utilizing web scraping techniques such as self-made bots, inside Airbnb and AirDNA [@Pawlicz2021UNDERSTANDINGSR] [@Prentice2023AddressingDQ] to extract publicly available information from Airbnb’s website, focusing on various aspects of listings such as location, price, availability, and host details. This approach allows for the assembly of comprehensive datasets, which are then cleansed and organized to facilitate thorough analysis.
 
 :::
 
-
-## 3. How did they collect it?
-
-::: {.duedate}
-
-( 5 points; Answer due Week 8 )
-
-:::
 
 ## 4. How does the method of collection (Q3) impact the completeness and/or accuracy of the InsideAirbnb data? How well does it represent the process it seeks to study, and what wider issues does this raise?
 
 ::: {.duedate}
 
-( 11 points; Answer due Week 9 )
+The data collection method used by InsideAirbnb raises data quality issues, mainly related to data incompleteness, reliance on website structure, and technical challenges. In terms of accuracy, data is automatically retrieved from the website, which possess the risk of capturing inaccurate or outdated information due to the dynamic nature of web content [@krotov2023big].
+
+In addition, due to privacy measures, the geographic coordinates provided by Airbnb may not reflect the exact location of the listing, which adds a layer of inaccuracy. And as web scraping depends heavily on the structure of the Airbnb website. Changes to the website layout or measures to block scraping activities may disrupt data collection efforts, like Airbnb's anti-scrap measures including CAPTCHA or IP bans, pose additional challenges [@Prentice2023AddressingDQ]. This burdens data analysts by requiring them to constantly develop and maintain scraping scripts. 
+
+In the discussion of the structure of InsideAirbnb data, it contains all aspects of the Airbnb market, including the distribution and characteristics of listings, pricing models, and the impact of Airbnb on the local housing market. And it is a relatively complete dataset and can assist with comprehensive analysis study.
+
+Besides the accuracy concerns, the use of InsideAirbnb data raises technical, legal, and ethical issues.
+Legally, as discussed in Sobel [@sobel2021new], scraping faces challenges in different jurisdictions, depending on how it intersects with privacy laws and terms of service agreements. This could affect the legality of the Inside Airbnb data collection process, especially if it violates Airbnb’s terms of service. Scraping also raises ethical issues, particularly regarding the consent of data subjects (Airbnb hosts and guests) whose information is collected without explicit permission. This raises significant privacy issues, as highlighted in the study by Xie and Karan [@xie2019consumers], where users’ awareness and concerns about how their data is used influence their privacy management behaviours.
 
 :::
 
@@ -265,9 +244,22 @@ Inside Airbnb is a mission driven project that provides data and advocacy about 
 
 ::: {.duedate}
 
-( 18 points; Answer due {{< var assess.group-date >}} )
+The use of the InsideAirbnb database does raise several ethical considerations.
+
+Firstly, there are issues of legal compliance. Web scraping can conflict with legal standards and ethical norms, particularly when data is collected without explicit consent, potentially leading to legal actions [@krotov2023big].
+
+Secondly, privacy concerns for individuals must be addressed. Although the data might be publicly accessible, individuals typically do not anticipate their rental information being extensively aggregated and analyzed [@brenning2023web].
+
+In many instances, data subjects (hosts and guests) are neither directly informed nor asked for consent when their data is scraped and analyzed. This presents a significant ethical dilemma: using their information without explicit permission, especially when such data might be utilized to draw conclusions or influence policies that could directly impact them.
+
+Moreover, there is the issue of how policymaking might be influenced by the data. Since the scraped data can contain errors, issues with accuracy and potential misrepresentation may lead to misleading conclusions that could negatively affect Airbnb hosts, guests, and policy decisions.
+
+Additionally, the misuse of data poses a significant ethical concern. When analyzing Inside Airbnb data, it is crucial to ensure that the data is not used for purposes unintended by the original data providers, such as market manipulation, unfair competition, or research that adversely impacts hosts and guests.
+
+Lastly, transparency and accountability are crucial. Ethical research involving data scraping should clearly disclose its methodologies, the specific data collected, and how this data is utilized. Such transparency is especially important for accountability, particularly if the research has the potential to influence public opinion or policy [@brenning2023web].
 
 :::
+
 
 
 ## 6. With reference to the InsideAirbnb data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and the types of properties that they list suggest about the nature of Airbnb lettings in London? 
@@ -576,15 +568,582 @@ Chaudhary had illustrated some drawbacks of short term renting [@chaudhary2021ef
 1. **Reduced long-term housing supply**: Due to higher profits from short-term rentals (e.g., Airbnb), many landlords prioritize short-term leases over long-term rentals, exacerbating London's housing crisis and driving up rents, especially for low- and middle-income residents.
 2. **Community impacts**: A high volume of short-term rentals can disrupt neighborhoods, increasing noise and tourist traffic, making communities less appealing for long-term residents and undermining stability and safety.
 
+## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London?
 
-## 7. Drawing on your previous answers, and supporting your response with evidence (*e.g.* figures, maps, EDA/ESDA, and simple statistical analysis/models drawing on experience from, e.g., CASA0007), how *could* the InsideAirbnb data set be used to inform the regulation of Short-Term Lets (STL) in London? 
+### 7.3 The Impact of Airbnb on London Neighborhoods: A K-Means Geodemographic Classification
 
-::: {.duedate}
+#### 7.3.1 Data processing
 
-( 45 points; Answer due {{< var assess.group-date >}} )
+ *key variables*
+  - Airbnb Average Price per Night: Reflects the economics of the short-term rental market.
+  - Airbnb Density: shows how well Airbnb's are distributed in a given neighborhood.
+  - Changes in Social Listing Prices Over a Five-Year Period: Indirectly reflects Airbnb's potential impact on the local real estate market.
+  - Population Density: Indicates the size and density of a community's population.
+  - Income Deprivation Index: Higher values indicate greater income deprivation, which may be
+  - correlate with the economic status and social vulnerability of the community
+  - Hotel Density: measures the competitive environment for traditional lodging establishments.
+  - Attraction Density: Reflects the community's tourist appeal and potential demand for Airbnb's.
+  - Public Transportation Accessibility: Demonstrates the community's accessibility to tourists.
 
-:::
+*Variables that need to be processed :*
 
+1. Calculate the density of tourist attractions in each LSOA in London
+
+```{python}
+#| output: false
+!pip install --upgrade osmnx
+import osmnx as ox
+print(ox.__version__)  # Should be 1.2.2 or newer
+```
+
+```{python}
+#| output: false
+import geopandas as gpd
+import pandas as pd
+
+#  Load London LSOA boundary data
+lsoa_boundaries = gpd.read_file("data/London/LSOA_2011_London_gen_MHW.shp")
+
+# Retrieve tourist attraction data for London
+# Use OSMnx to extract nodes tagged as `tourism=attraction`
+tourist_attractions = ox.features_from_place(
+    "London, England", tags={"tourism": "attraction"}
+)
+
+# Ensure the coordinate reference system (CRS) is consistent
+tourist_attractions = tourist_attractions.to_crs(lsoa_boundaries.crs)
+
+# : Count the number of tourist attractions within each LSOA
+lsoa_boundaries["tourist_attraction_count"] = lsoa_boundaries.apply(
+    lambda row: tourist_attractions.within(row.geometry).sum(), axis=1
+)
+
+#  Calculate the density of tourist attractions (per square kilometer)
+# Transform to an equal-area projection to compute accurate area
+lsoa_boundaries = lsoa_boundaries.to_crs({"proj": "cea"})
+lsoa_boundaries["area_km2"] = lsoa_boundaries.geometry.area / 1e6  # Convert to square kilometers
+
+# Tourist attraction density = count / area
+lsoa_boundaries["tourist_attraction_density"] = (
+    lsoa_boundaries["tourist_attraction_count"] / lsoa_boundaries["area_km2"]
+)
+
+#  Export results to a CSV file
+# Use 'LSOA11CD' as the LSOA code column
+output_path = "data/london_lsoa_tourist_density.csv"
+output_csv = lsoa_boundaries[["LSOA11CD", "tourist_attraction_count", "tourist_attraction_density"]]
+output_csv.to_csv(output_path, index=False)
+
+print(f"Tourist attraction density has been saved to {output_path}")
+```
+
+ 2. Calculate hotel density for each LSOA unit
+
+```{python}
+#| output: false
+from shapely.geometry import Point
+
+# 1. Load LSOA boundary data
+lsoa_shp_path = "data/London/LSOA_2011_London_gen_MHW.shp"
+lsoa_data = gpd.read_file(lsoa_shp_path)
+
+# (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
+lsoa_data['area_km2'] = lsoa_data['geometry'].area / 10**6
+
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# 2. Get the London boundary 
+london_boundary = lsoa_data.dissolve().geometry.iloc[0]
+
+# 3. Fetch hotel data from OpenStreetMap
+hotels = ox.features_from_polygon(london_boundary, tags={"tourism": "hotel"}) 
+
+# Convert the hotel data into a GeoDataFrame and retain only geometry
+hotels_gdf = gpd.GeoDataFrame(hotels[['geometry', 'name']].dropna(subset=['geometry']), crs="EPSG:4326")
+
+# 4. Spatially join hotels to their respective LSOA units
+hotels_in_lsoa = gpd.sjoin(hotels_gdf, lsoa_data, how="inner", predicate="within")
+
+# Count the number of hotels per LSOA
+hotel_counts = hotels_in_lsoa.groupby('LSOA11CD').size().reset_index(name='hotel_count')
+
+# 5. Calculate hotel density (number of hotels per square kilometer)
+lsoa_data = lsoa_data.merge(hotel_counts, on='LSOA11CD', how='left')
+lsoa_data['hotel_count'] = lsoa_data['hotel_count'].fillna(0)
+lsoa_data['hotel_density'] = lsoa_data['hotel_count'] / lsoa_data['area_km2']
+
+# 6. Save results to a CSV file
+output_csv_path = "data/lsoa_hotel_density.csv"
+lsoa_data[['LSOA11CD', 'hotel_count', 'area_km2', 'hotel_density']].to_csv(output_csv_path, index=False)
+
+print(f"Hotel density data saved to {output_csv_path}")
+```
+
+ 3. Calculate five-year house price changes for each LSOA unit
+
+```{python}
+#| output: false
+file_path_xlsx = "data/LSOA_Median_properties_price.xlsx"
+
+# Load the data
+data_xlsx = pd.read_excel(file_path_xlsx, engine='openpyxl')
+
+# List of all London boroughs including the City of London
+london_boroughs = [
+    "City of London", "Barking and Dagenham", "Barnet", "Bexley", "Brent", "Bromley", "Camden",
+    "Croydon", "Ealing", "Enfield", "Greenwich", "Hackney", "Hammersmith and Fulham", "Haringey",
+    "Harrow", "Havering", "Hillingdon", "Hounslow", "Islington", "Kensington and Chelsea",
+    "Kingston upon Thames", "Lambeth", "Lewisham", "Merton", "Newham", "Redbridge",
+    "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", "Waltham Forest", "Wandsworth", "Westminster"
+]
+
+# Filter the data for London based on the local authority name
+london_data = data_xlsx[data_xlsx['Local authority name'].isin(london_boroughs)]
+
+# Save the filtered data to a CSV file
+output_csv_path = "data/London_Housing_Data.csv"
+london_data.to_csv(output_csv_path, index=False)
+
+print(f"Filtered London data has been saved to {output_csv_path}")
+```
+
+```{python}
+#| output: false
+
+# Load the data
+data = pd.read_csv('data/London_Housing_Data.csv')
+
+# Strip any leading/trailing spaces in the column names
+data.columns = data.columns.str.strip()
+
+# Convert 'Year ending Mar 2023' and 'Year ending Dec 2018' to numeric (if they are not already)
+data['Year ending Mar 2023'] = pd.to_numeric(data['Year ending Mar 2023'], errors='coerce')
+data['Year ending Dec 2018'] = pd.to_numeric(data['Year ending Dec 2018'], errors='coerce')
+
+# Check for missing values in the year columns after conversion
+missing_values = data[['Year ending Mar 2023', 'Year ending Dec 2018']].isnull().sum()
+print(f"Missing values in Year columns:\n{missing_values}")
+
+# Create a copy of the data to avoid SettingWithCopyWarning
+data_clean = data.copy()
+
+# Drop rows with missing values for price calculations (only for the year columns)
+data_clean = data_clean.dropna(subset=['Year ending Mar 2023', 'Year ending Dec 2018'])
+
+# Calculate the price change rate between 'Year ending Mar 2023' and 'Year ending Dec 2018'
+# Use .loc to avoid SettingWithCopyWarning
+data_clean.loc[:, 'Price_Change'] = ((data_clean['Year ending Mar 2023'] - data_clean['Year ending Dec 2018']) / data_clean['Year ending Dec 2018'] * 100)
+
+# Merge the price change back with the original data (using LSOA_code as the key)
+data_with_change = pd.merge(data, data_clean[['LSOA code', 'Price_Change']], on='LSOA code', how='left')
+
+# Ensure data is sorted by LSOA code
+data_with_change_sorted = data_with_change.sort_values(by=['LSOA code'])
+
+# Save the result to a new CSV file
+data_with_change_sorted[['LSOA code', 'Price_Change']].to_csv('data/LSOA_London_houseprice_change.csv', index=False)
+
+print("House price change data saved to 'LSOA_London_houseprice_change.csv'")
+```
+
+```{python}
+#| output: false
+# Define paths for the input Excel files and output CSV files
+input_file_imd = "data/LSOA_IMD_london.xlsx"
+output_file_imd = "data/LSOA_IMD_london.csv"
+
+input_file_population = "data/LSOA_population_density.xlsx"
+output_file_population = "data/LSOA_population_density.csv"
+
+# Function to convert an Excel file to a CSV file
+def convert_excel_to_csv(input_path, output_path):
+    # Read the Excel file
+    data = pd.read_excel(input_path)
+    # Save the data to a CSV file
+    data.to_csv(output_path, index=False)
+    print(f"Converted {input_path} to {output_path}")
+
+# Convert LSOA_IMD_london.xlsx to LSOA_IMD_london.csv
+convert_excel_to_csv(input_file_imd, output_file_imd)
+
+# Convert LSOA_population_density.xlsx to LSOA_population_density.csv
+convert_excel_to_csv(input_file_population, output_file_population)
+```
+
+ 4. Read in and process Airbnb data
+
+```{python}
+#| output: false
+# read in Airbnb data
+airbnb_data = pd.read_csv('data/listings.csv.gz', compression='gzip', low_memory=False)
+```
+
+```{python}
+#| output: false
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# Filter out only the columns we need
+columns_to_keep = ['id', 'property_type', 'room_type', 'price', 'review_scores_rating', 'review_scores_value', 'longitude', 'latitude']
+airbnb_filtered = airbnb_data[columns_to_keep].copy() 
+
+airbnb_filtered.loc[:, 'geometry'] = airbnb_filtered.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Create a GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_filtered, geometry='geometry', crs="EPSG:4326")  # Ensure CRS is WGS84
+
+airbnb_filtered.to_csv('data/filtered_airbnb_data.csv', index=False)
+
+airbnb_gdf.to_file('data/filtered_airbnb_data.geojson', driver='GeoJSON')
+
+# Print the cleaned data
+print(airbnb_gdf.head())
+```
+
+ 5. Calculate Airbnb Density and Average Price per Night for LSOA Units
+
+```{python}
+#| output: false
+from shapely.geometry import Point
+
+# Load the LSOA boundary data
+lsoa_shp_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_data = gpd.read_file(lsoa_shp_path)
+
+# Use the projected coordinate system to calculate the area (EPSG:27700 - British National Grid)
+lsoa_data = lsoa_data.to_crs("EPSG:27700")
+lsoa_data['area_km2'] = lsoa_data.geometry.area / 10**6  # Convert area from square meters to square kilometers
+
+# Reproject back to WGS84 for subsequent spatial operations
+lsoa_data = lsoa_data.to_crs("EPSG:4326")
+
+# Load the Airbnb data with latitude and longitude
+airbnb_df = pd.read_csv('data/filtered_airbnb_data.csv')
+
+# Ensure the Airbnb data has latitude and longitude columns and create geometries
+airbnb_df['geometry'] = airbnb_df.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Convert DataFrame to GeoDataFrame
+airbnb_gdf = gpd.GeoDataFrame(airbnb_df, geometry='geometry', crs="EPSG:4326")
+
+# Spatial join to get the Airbnb points within each LSOA
+airbnb_in_lsoa = gpd.sjoin(airbnb_gdf, lsoa_data, how="inner", predicate="within")
+
+# Clean the price column
+airbnb_in_lsoa['price'] = airbnb_in_lsoa['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
+
+# Calculate the average price for each LSOA
+average_price = airbnb_in_lsoa.groupby('LSOA11CD')['price'].mean().reset_index()
+average_price.rename(columns={'price': 'average_price'}, inplace=True)
+
+# Calculate the number of Airbnb listings in each LSOA
+airbnb_density = airbnb_in_lsoa.groupby('LSOA11CD')['price'].count().reset_index(name='airbnb_count')
+
+# Merge average price and Airbnb count with LSOA data
+lsoa_data = lsoa_data.merge(average_price, on='LSOA11CD', how='left')
+lsoa_data = lsoa_data.merge(airbnb_density, on='LSOA11CD', how='left')
+
+# Calculate Airbnb density (number of listings per square kilometer)
+lsoa_data['airbnb_density'] = lsoa_data['airbnb_count'] / lsoa_data['area_km2']
+
+# Display the result
+print(lsoa_data[['LSOA11CD', 'average_price', 'airbnb_count', 'airbnb_density']].head())
+```
+
+ 6. Merge all data
+
+```{python}
+#| output: false
+# Load all the datasets
+airbnb_df = pd.read_csv('data/LSOA_airbnb_summary.csv')
+houseprice_df = pd.read_csv('data/LSOA_London_houseprice_change.csv')
+pop_density_df = pd.read_csv('data/LSOA_population_density.csv')
+imd_df = pd.read_csv('data/LSOA_IMD_london.csv')
+hotel_density_df = pd.read_csv('data/lsoa_hotel_density.csv')
+tourist_density_df = pd.read_csv('data/london_lsoa_tourist_density.csv')
+avptai_df = pd.read_csv('data/LSOA_AvPTAI.csv')
+
+#  Merge the datasets based on the correct columns
+merged_data = airbnb_df.merge(houseprice_df, left_on='LSOA11CD', right_on='LSOA code', how='left')
+merged_data = merged_data.merge(pop_density_df, left_on='LSOA11CD', right_on='LSOA Code', how='left')
+merged_data = merged_data.merge(imd_df, left_on='LSOA11CD', right_on='LSOA code (2011)', how='left')
+merged_data = merged_data.merge(hotel_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(tourist_density_df, on='LSOA11CD', how='left')
+merged_data = merged_data.merge(avptai_df, left_on='LSOA11CD', right_on='LSOA2011', how='left')
+
+# Select only the relevant columns
+final_data = merged_data[['LSOA11CD', 'average_price', 'airbnb_density', 'Price_Change', 
+                          'People per Sq Km', 'Income Score (rate)', 'hotel_density', 
+                          'tourist_attraction_density', 'AvPTAI2015']]
+
+# Check the first few rows of the final data
+print(final_data.head())
+
+# Optionally, save the final merged data to a CSV file
+final_data.to_csv('data/final_LSOA_data.csv', index=False)
+```
+
+ 7. Check and clean the data  
+
+```{python}
+#| output: false
+# Step 1: Check the column names for consistency
+print(final_data.columns)
+
+# Step 2: Strip any leading/trailing spaces from column names
+final_data.columns = final_data.columns.str.strip()
+
+# Step 3: Check for missing values
+print(final_data.isnull().sum())
+
+# Step 4: Fill missing values for numerical columns using the median, using `.loc` to avoid SettingWithCopyWarning
+numerical_columns = ['average_price', 'airbnb_density', 'Price_Change', 'People per Sq Km', 
+                     'Income Score (rate)', 'hotel_density', 'tourist_attraction_density', 'AvPTAI2015']
+
+for col in numerical_columns:
+    if col in final_data.columns:
+        final_data.loc[:, col] = final_data[col].fillna(final_data[col].median())
+
+# Step 5: Check if any missing values remain
+print(final_data.isnull().sum())
+```
+
+#### 7.3.2 Standardization (Z-score scaling)
+
+```{python}
+#| output: false
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+
+# Print the column names
+print(final_data.columns)
+
+# Dynamically create numerical_columns
+numerical_columns = [col for col in ['average_price', 'airbnb_density', 'price_change', 
+                     'people per sq km', 'income score (rate)', 
+                     'hotel_density', 'tourist_attraction_density', 'avptai2015'] if col in final_data.columns]
+
+print("Columns to be standardized:", numerical_columns)
+
+# Initialize StandardScaler
+scaler = StandardScaler()
+
+# Safely apply standardization using .loc
+final_data.loc[:, numerical_columns] = scaler.fit_transform(final_data[numerical_columns])
+
+# Check the result
+print(final_data.head())
+```
+
+#### 7.3.3 Elbow Method to caculate the k value
+
+```{python}
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import numpy as np
+import pandas as pd
+
+# Set random seeds to ensure reproducibility
+random_state = 42
+np.random.seed(random_state)
+
+# Create a copy of the dataframe (ensure the data is stable and sorted)
+final_data = final_data.copy()
+final_data = final_data.sort_values(by=final_data.columns.tolist()).reset_index(drop=True)
+
+# Select relevant columns (excluding 'LSOA11CD' for clustering)
+clustering_data = final_data.drop(columns=['LSOA11CD'])
+
+# Standardize the data (Z-score scaling)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(clustering_data)
+
+# Elbow Method for Optimal K
+plt.figure(figsize=(8, 5))
+inertia = []
+K_range = range(1, 11)
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=random_state, n_init=10)  # Fix n_init
+    kmeans.fit(X_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Plot Elbow Method
+plt.plot(K_range, inertia, marker='o')
+plt.title("Elbow Method for Optimal K")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Inertia")
+plt.grid(True)
+plt.show()
+```
+
+ - Based on the information provided in the graphs, the optimal number of clusters (K) appears to be 3.
+
+#### 7.3.4 K-means Clustering
+
+```{python}
+#| output: false
+import numpy as np
+from sklearn.cluster import KMeans
+
+# Set the random state for reproducibility
+random_state = 42
+np.random.seed(random_state)
+
+# Assume final_data is your dataframe and X_scaled is your scaled feature data
+# Perform K-Means clustering with fixed random state, n_init, and initial centers
+
+optimal_k = 4  # Optimal number of clusters
+
+# Fixing the initial centroids using k-means++ initialization
+# k-means++ is deterministic when the random state is set
+kmeans = KMeans(n_clusters=optimal_k, init='k-means++', n_init=10, random_state=random_state)
+
+# Fit the model and predict clusters
+final_data['Cluster'] = kmeans.fit_predict(X_scaled)
+
+# Display clustering results
+print("Clustering results:")
+print(final_data[['LSOA11CD', 'Cluster']].head())
+
+# Analyze the mean characteristics of each cluster (numerical features only)
+numerical_columns = [col for col in final_data.columns if col != 'LSOA11CD' and col != 'Cluster']
+cluster_summary = final_data.groupby('Cluster')[numerical_columns].mean()
+print("\nCluster summary (mean values of features):")
+print(cluster_summary)
+
+# Count the number of neighborhoods in each cluster
+cluster_counts = final_data['Cluster'].value_counts()
+print("\nNumber of neighborhoods in each cluster:")
+print(cluster_counts)
+
+# Save the clustering results to a CSV file
+final_data.to_csv('data/london_airbnb_clustering_results.csv', index=False)
+print("\nClustering results have been saved to 'data/london_airbnb_clustering_results.csv'.")
+```
+
+**Results of K-means clustering**
+
+1. Cluster 0: "Low Impact — Stable Residential Areas"
+- Lowest Airbnb Density (-0.42) and Hotel Density (-0.13) indicate minimal tourism and Airbnb presence.
+- Highest Price Change (19.39) reflects significant housing market growth, possibly driven by local development or gentrification.
+- Low Population Density (6,688 people/km²) and Poor Public Transport Access (7.98) make these areas less attractive to short-term rentals.
+- Moderate Income Deprivation (0.11) suggests economic vulnerability. 
+
+2. Cluster 1: "Moderate Impact — Balanced Zones"
+- Moderate Airbnb Density (0.44) and Hotel Density (-0.06) indicate balanced tourism and residential dynamics.
+- Moderate Price Change (10.75) and Population Density (16,761 people/km²) suggest a stable housing market with mixed use.
+- Moderate Public Transport Access (19.40) supports tourism without overwhelming local infrastructure.
+- Higher Income Deprivation (0.19) reflects economic challenges despite balanced Airbnb activity.
+
+3. Cluster 2: "Emerging Impact — High Price Pressure Areas"
+- Unusually High Average Price (18.90) indicates significant economic pressures on the housing market.
+- Moderate Airbnb Density (0.48) and Tourist Attraction Density (0.19) reflect emerging tourism activity.
+- High Population Density (17,579 people/km²) combined with Good Public Transport Access (30.45) supports growth in short-term rentals.
+- Moderate Income Deprivation (0.16) suggests economic tension within these areas.
+
+4. Cluster 3:"High Impact — Tourist Hotspots"
+- Highest Airbnb Density (3.51) and Hotel Density (3.11) mark these areas as major tourism accommodation hubs.
+- Highest Average Price (0.54) suggests strong profitability for short-term rentals.
+- High Tourist Attraction Density (1.63) and Population Density (20,976 people/km²) highlight their appeal to visitors.
+- Convenient Public Transport Access (53.91) facilitates heavy visitor traffic.
+
+#### 7.3.5 Plot K-Means Clustering Result
+
+```{python}
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+from matplotlib.patches import Patch
+from matplotlib.legend_handler import HandlerPatch
+from IPython.display import Image  # 用于显示保存的图片
+
+# Load LSOA shapefile
+shapefile_path = 'data/London/LSOA_2011_London_gen_MHW.shp'
+lsoa_gdf = gpd.read_file(shapefile_path)
+
+# Load clustering results
+clustering_results = pd.read_csv('data/london_airbnb_clustering_results.csv')
+clustering_results.rename(columns={'lsoa11cd': 'LSOA11CD'}, inplace=True)
+lsoa_gdf = lsoa_gdf.merge(clustering_results[['LSOA11CD', 'Cluster']], on='LSOA11CD', how='left')
+
+# Ensure the CRS matches
+lsoa_gdf = lsoa_gdf.to_crs("EPSG:4326")
+
+# Create a map plot
+fig, ax = plt.subplots(figsize=(12, 12))
+
+# Define softer and more pastel cluster colors, with cluster 0 as a transparent light blue
+cluster_colors = {
+    0: (0.6, 0.8, 1.0, 0.2),  # Transparent light blue (R, G, B, Alpha)
+    1: '#FCD34D',  # Soft peach
+    2: '#93C5FD',  # Soft blue
+    3: '#0284C7'   # Vibrant blue (to make cluster 3 more prominent)
+}
+
+# Custom legend handler for PatchCollection
+class HandlerColoredPatch(HandlerPatch):
+    def create_artists(self, legend, orig_handle,
+                       xdescent, ydescent, width, height, fontsize, trans):
+        return [Patch(facecolor=orig_handle.get_facecolor(), edgecolor='gray', linewidth=0.3)]
+
+# Plot LSOA regions colored by cluster
+for cluster, color in cluster_colors.items():
+    if isinstance(color, tuple):  # If the color is in RGBA format (transparent)
+        lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(
+            ax=ax, color=color, edgecolor='gray', linewidth=0.3, label=f'Cluster {cluster}'
+        )
+    else:  # For solid colors
+        lsoa_gdf[lsoa_gdf['Cluster'] == cluster].plot(
+            ax=ax, color=color, edgecolor='gray', linewidth=0.3, label=f'Cluster {cluster}'
+        )
+
+# Layout and legend styling
+ax.set_title("K-Means Clustering Results by LSOA", fontsize=16, fontweight='light')
+ax.set_xlabel("Longitude", fontsize=12)
+ax.set_ylabel("Latitude", fontsize=12)
+
+# Adjust the legend to handle custom colors
+legend_labels = [Patch(facecolor=color, edgecolor='gray', label=f'Cluster {cluster}') for cluster, color in cluster_colors.items()]
+ax.legend(handles=legend_labels, title="Clusters", loc='upper right', fontsize=12)
+
+# Remove axis for a cleaner map
+ax.set_axis_off()
+
+# Save the map to a file
+output_image_path = 'data/london_airbnb_clusters_map.png'
+plt.tight_layout()
+plt.savefig(output_image_path)
+plt.show()
+```
+
+- *From the map:*
+- Cluster 0 dominates the outer boroughs of London and peripheral areas.
+- Cluster 1, which is Small, isolated neighborhoods near central areas showing signs of Airbnb growth.
+- Cluster 2 is widely distributed across inner London and intermediate zones surrounding central areas.It forms a ring around the core city center, particularly dense in the inner boroughs like Hackney, Islington, and Camden.
+- Cluster 3, is concentrated in central London, including areas like Westminster, the City of London, and parts of Southwark.
+  
+
+#### 7.3.6 Conclusion on Airbnb Impact and Policy Recommendations:
+
+1. Low Impact — Stable Residential Areas:
+  - Airbnb Impact:These neighborhoods are largely residential with minimal tourism influence but are at risk of future Airbnb expansion due to rising housing prices.
+  - Policy Recommendations: Proactively monitor Airbnb growth. Implement measures to prevent housing market disruption, such as rental density caps.
+
+2. Emerging Airbnb Areas — “Expansion Zones”:
+  - Airbnb Impact: These neighborhoods have a moderate Airbnb presence that coexists with local housing needs.
+  - Policy Recommendations: Encourage sustainable tourism while safeguarding affordable housing. Adopt policies that prevent excessive short-term rental concentration.
+ 
+
+3. High Impact — Tourist Hotspots:
+ - Airbnb Impact: These areas are already heavily impacted by Airbnb activity, creating pressure on housing availability and affordability.
+ - Policy Recommendations: Introduce stricter regulations, such as rental caps, zoning restrictions, and taxation on short-term rentals to protect long-term residents.
+
+4. Emerging Impact — High Price Pressure Areas:
+- Airbnb Impact: These neighborhoods are emerging hotspots, where Airbnb activity and housing pressures are growing.
+- Policy Recommendations: Implement early intervention strategies to balance tourism growth and housing stability. Monitor housing price trends closely.
 
 ## Sustainable Authorship Tools
 
